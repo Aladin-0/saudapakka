@@ -1,0 +1,54 @@
+services:
+  # 1. DATABASE
+  db:
+    image: pgvector/pgvector:pg16
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=saudapakka_db
+      - POSTGRES_USER=hello_django
+      - POSTGRES_PASSWORD=hello_django
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hello_django -d saudapakka_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. BACKEND
+  web:
+    build: ./saudapakka_backend
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./saudapakka_backend/src:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - ./saudapakka_backend/.env
+
+  # 3. FRONTEND
+  frontend:
+    build: ./saudapakka_frontend
+    container_name: saudapakka_nextjs
+    volumes:
+      - ./saudapakka_frontend:/app
+      # This keeps the container's node_modules safe from your local machine
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    environment:
+      # REMOVED THE BROKEN PATH VARIABLE HERE
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:

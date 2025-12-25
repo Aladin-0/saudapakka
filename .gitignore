@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+*/node_modules/
+saudapakka_frontend/node_modules/
+
+# Python/Django
+__pycache__/
+*.py[cod]
+venv/
+env/
+.env
+db.sqlite3
+
+# System
+.DS_Store  
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Build
+.next/
+dist/
+build/
