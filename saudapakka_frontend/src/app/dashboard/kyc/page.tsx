@@ -1,3 +1,5 @@
+// kyc/page.tsx
+
 "use client";
 
 import { useState } from "react";
@@ -21,7 +23,9 @@ export default function KYCPage() {
     setLoading(true);
     try {
       // The redirect URL should point to our new callback page
-      const redirectUrl = window.location.origin + '/dashboard/kyc/callback';
+      // const redirectUrl = window.location.origin + '/dashboard/kyc/callback';
+      // Ensure the trailing slash is consistent
+      const redirectUrl = `${window.location.origin}/dashboard/kyc/callback`;
 
       const res = await api.post("/api/kyc/initiate/", {
         redirect_url: redirectUrl

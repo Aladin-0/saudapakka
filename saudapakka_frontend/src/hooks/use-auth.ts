@@ -1,9 +1,12 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import Cookies from 'js-cookie';
+import api from '@/lib/axios';
 
 interface User {
   id: string;
+  first_name?: string;  // Added for layout compatibility
+  last_name?: string;   // Added for layout compatibility
   full_name: string;
   email: string;
   is_active_seller: boolean;
@@ -15,30 +18,49 @@ interface AuthState {
   user: User | null;
   setAuth: (user: User, token: string) => void;
   logout: () => void;
+  refreshUser: () => Promise<void>;
+  checkUser: () => Promise<void>; // Alias for layouts
 }
 
 export const useAuth = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
 
       setAuth: (user, token) => {
-        // 1. Save Token to Cookie (For API calls)
         Cookies.set('access_token', token, { expires: 7 });
-
-        // 2. Update State (Persist middleware will auto-save this to localStorage)
         set({ user });
+      },
+
+      refreshUser: async () => {
+        try {
+          const res = await api.get("/api/user/me/");
+          // This updates the local state AND the persisted localStorage
+          set({ user: res.data });
+          console.log("✅ Auth State Synchronized:", res.data);
+        } catch (error) {
+          console.error("Failed to refresh user data", error);
+        }
+      },
+
+      // Use this in layouts to ensure fresh data on every navigation
+      checkUser: async () => {
+        const token = Cookies.get('access_token');
+        if (token) {
+          await get().refreshUser();
+        }
       },
 
       logout: () => {
         Cookies.remove('access_token');
+        localStorage.removeItem('saudapakka-auth'); // Clear storage
         set({ user: null });
       },
     }),
     {
-      name: 'saudapakka-auth', // Unique name for localStorage key
+      name: 'saudapakka-auth',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ user: state.user }), // Only save the 'user' object
+      partialize: (state) => ({ user: state.user }),
     }
   )
 );

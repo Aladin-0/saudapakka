@@ -16,11 +16,13 @@ L.Icon.Default.mergeOptions({
 
 interface LocationPickerProps {
   onLocationSelect: (lat: number, lng: number) => void;
+  initialLat?: number;
+  initialLng?: number;
 }
 
-function LocationMarker({ onSelect }: { onSelect: (lat: number, lng: number) => void }) {
-  const [position, setPosition] = useState<L.LatLng | null>(null);
-  
+function LocationMarker({ onSelect, initialPos }: { onSelect: (lat: number, lng: number) => void, initialPos: L.LatLng | null }) {
+  const [position, setPosition] = useState<L.LatLng | null>(initialPos);
+
   const map = useMapEvents({
     click(e) {
       setPosition(e.latlng);
@@ -32,19 +34,23 @@ function LocationMarker({ onSelect }: { onSelect: (lat: number, lng: number) => 
   return position === null ? null : <Marker position={position} />;
 }
 
-export default function LocationPicker({ onLocationSelect }: LocationPickerProps) {
+export default function LocationPicker({ onLocationSelect, initialLat, initialLng }: LocationPickerProps) {
   // Default center: Pune/Aurangabad region
   const defaultCenter = { lat: 19.8762, lng: 75.3433 };
 
+  // Use initial coords for center if available
+  const center = (initialLat && initialLng) ? { lat: initialLat, lng: initialLng } : defaultCenter;
+  const initialPos = (initialLat && initialLng) ? new L.LatLng(initialLat, initialLng) : null;
+
   return (
     <div className="h-[300px] w-full rounded-md overflow-hidden border z-0">
-      <MapContainer 
-        center={defaultCenter} 
-        zoom={13} 
+      <MapContainer
+        center={center}
+        zoom={13}
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <LocationMarker onSelect={onLocationSelect} />
+        <LocationMarker onSelect={onLocationSelect} initialPos={initialPos} />
       </MapContainer>
     </div>
   );

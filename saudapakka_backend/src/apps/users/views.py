@@ -40,7 +40,17 @@ class SendOtpView(APIView):
             return Response({'error': 'Email is required'}, status=400)
 
         otp = str(random.randint(100000, 999999))
-        user, created = User.objects.get_or_create(email=email, defaults={'username': email})
+        
+        # FIX: Generate a temp unique phone number to satisfy unique constraint
+        # max_length=15. "temp_" (5) + 8 chars = 13 chars.
+        import uuid
+        user, created = User.objects.get_or_create(
+            email=email, 
+            defaults={
+                'username': email,
+                'phone_number': f"temp_{uuid.uuid4().hex[:8]}"
+            }
+        )
         
         user.otp = otp
         user.otp_created_at = timezone.now()
@@ -177,88 +187,75 @@ class VerifyKYCStatusView(APIView):
 
     def post(self, request):
         entity_id = request.data.get('entity_id')
-        print(f"DEBUG: VerifyKYCStatusView received entity_id: {entity_id}", flush=True)
+        print(f"DEBUG: Verifying ID {entity_id}")
         
-        if not entity_id:
-            return Response({"error": "entity_id is required"}, status=400)
-
         result = sandbox.get_kyc_status(entity_id)
-        print(f"DEBUG: Sandbox result: {result}", flush=True)
         
-        # 1. Check if Sandbox returned a "Processing" status
-        # Note: Sandbox might return a 202 status code or a message like yours
-        if result.get('code') == 202 or "processing" in result.get('message', '').lower():
-            return Response({
-                "status": "PROCESSING",
-                "message": "User authorized, but data is still being fetched from DigiLocker. Please retry in 3-5 seconds."
-            }, status=202)
-
-        # 2. Check for success (200)
         if result.get('code') == 200:
-            raw_data = result.get('data', {})
-            # Use .get() to avoid KeyErrors if the structure is slightly different
-            aadhaar = raw_data.get('data', {}).get('aadhaar_data', {})
-
-            if not aadhaar:
-                return Response({"status": "PROCESSING", "message": "Aadhaar data not yet available."}, status=202)
-
-            # --- DATA IS READY: SAVE TO DB ---
-            try:
-                kyc = KYCVerification.objects.get(user=request.user)
-                kyc.full_name = aadhaar.get('name')
-                kyc.dob = aadhaar.get('dob')
-                kyc.address_json = aadhaar.get('address')
-                kyc.status = 'VERIFIED'
-                kyc.save()
-                
-                # Sync User Model
-                user = request.user
-                name_parts = kyc.full_name.split(' ')
-                user.first_name = name_parts[0]
-                if len(name_parts) > 1:
-                    user.last_name = name_parts[-1]
-                user.save()
-
-                return Response({
-                    "status": "SUCCESS",
-                    "message": "Identity Verified Successfully!",
-                    "data": {"name": kyc.full_name}
-                })
-            except KYCVerification.DoesNotExist:
-                return Response({"error": "KYC session mismatch."}, status=404)
+            aadhaar = result.get('data', {}).get('aadhaar_data', {})
             
-        return Response({
-            "status": "FAILED",
-            "error": result.get('message', "Verification failed."),
-            "upstream_response": result
-        }, status=400)
+            if not aadhaar or not aadhaar.get('name'):
+                 return Response({"status": "PROCESSING"}, status=202)
+
+            # SAVE DATA
+            kyc = KYCVerification.objects.get(user=request.user)
+            kyc.full_name = aadhaar.get('name')
+            kyc.dob = aadhaar.get('dob')
+            kyc.address_json = aadhaar.get('address')
+            kyc.status = 'VERIFIED'
+            kyc.save()
+            
+            # Update User profile
+            user = request.user
+            user.first_name = kyc.full_name.split(' ')[0]
+            user.save()
+
+            print(f"✅ KYC SUCCESS for {user.email}")
+            return Response({"status": "SUCCESS", "data": {"name": kyc.full_name}})
+
+        # If rate limited or processing
+        status_code = 202 if result.get('code') in [202, 429] else 400
+        return Response({"status": "PROCESSING"}, status=status_code)
+
 # --- 4. ROLE UPGRADES ---
 
 class UpgradeRoleView(APIView):
-    """Allows KYC-verified users to become active Sellers or Brokers."""
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
-        role = request.data.get('role')
+        role = request.data.get('role') # 'SELLER' or 'BROKER'
+        user = request.user
         
-        # Security: Force KYC completion before role upgrade
-        try:
-            kyc = request.user.kycverification
-            if kyc.status != 'VERIFIED':
-                return Response({"error": "Please complete KYC verification first."}, status=400)
-        except KYCVerification.DoesNotExist:
-            return Response({"error": "No KYC record found for this user."}, status=400)
+        # 1. Verify KYC Status first
+        # We use filter(...).first() to avoid the "RelatedObjectDoesNotExist" error
+        kyc = KYCVerification.objects.filter(user=user).first()
+        
+        if not kyc or kyc.status != 'VERIFIED':
+            return Response({
+                "error": "KYC not verified. Please complete verification first."
+            }, status=400)
 
+        # 2. Upgrade the role
         if role == 'SELLER':
-            request.user.is_active_seller = True
+            user.is_active_seller = True
+            user.is_active_broker = False # Mutually exclusive for now
         elif role == 'BROKER':
-            request.user.is_active_broker = True
-            BrokerProfile.objects.get_or_create(user=request.user)
+            user.is_active_broker = True
+            user.is_active_seller = False
+            # Create a broker profile if it doesn't exist
+            from .models import BrokerProfile
+            BrokerProfile.objects.get_or_create(user=user)
         else:
-            return Response({"error": "Invalid role type. Choose 'SELLER' or 'BROKER'."}, status=400)
+            return Response({"error": "Invalid role selected"}, status=400)
             
-        request.user.save()
-        return Response({"message": f"Congratulations! You are now a verified {role.lower()}"})
+        user.save()
+        
+        # 3. Return the updated user data so the frontend updates immediately
+        from .serializers import UserSerializer
+        return Response({
+            "message": f"Successfully upgraded to {role}",
+            "user": UserSerializer(user).data
+        })
 
 # --- 5. ADMIN DASHBOARD ---
 
@@ -284,3 +281,75 @@ class AdminDashboardStats(APIView):
                 "current_time": timezone.now()
             }
         })
+
+class AdminUserDocumentView(APIView):
+    """
+    Admin: Fetch documents for a specific user to verify.
+    """
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request, user_id):
+        try:
+            # Get the user and their KYC record
+            target_user = User.objects.get(id=user_id)
+            try:
+                kyc = KYCVerification.objects.get(user=target_user)
+                return Response({
+                    "user_id": target_user.id,
+                    "full_name": target_user.full_name,
+                    "kyc_status": kyc.status,
+                    "documents": {
+                        "name": kyc.full_name,
+                        "dob": kyc.dob,
+                        "address": kyc.address_json,
+                        "verified_at": kyc.verified_at
+                    }
+                })
+            except KYCVerification.DoesNotExist:
+                return Response({
+                    "user_id": target_user.id,
+                    "full_name": target_user.full_name,
+                    "kyc_status": "NOT_STARTED",
+                    "documents": None
+                })
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+
+class AdminVerifyUserView(APIView):
+    """
+    Admin: Manual override/verification of a user's status.
+    """
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, user_id):
+        action = request.data.get('action') # 'APPROVE' or 'REJECT'
+        
+        try:
+            target_user = User.objects.get(id=user_id)
+            kyc, created = KYCVerification.objects.get_or_create(user=target_user)
+            
+            if action == 'APPROVE':
+                kyc.status = 'VERIFIED'
+                kyc.verified_at = timezone.now()
+                kyc.save()
+                
+                # Auto-update user profile if verified
+                name_parts = kyc.full_name.split(' ') if kyc.full_name else []
+                if name_parts:
+                    target_user.first_name = name_parts[0]
+                    if len(name_parts) > 1:
+                        target_user.last_name = name_parts[-1]
+                    target_user.save()
+
+                return Response({"message": f"User {target_user.email} marked as VERIFIED."})
+            
+            elif action == 'REJECT':
+                kyc.status = 'REJECTED'
+                kyc.save()
+                return Response({"message": f"User {target_user.email} verification REJECTED."})
+                
+            else:
+                return Response({"error": "Invalid action. Use 'APPROVE' or 'REJECT'."}, status=400)
+                
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)

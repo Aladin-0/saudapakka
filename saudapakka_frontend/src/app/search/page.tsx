@@ -38,7 +38,7 @@ function SearchResultsContent() {
       if (filters.propertyType !== "ALL") params.append("property_type", filters.propertyType);
       if (filters.maxPrice) params.append("price__lte", filters.maxPrice);
 
-      const res = await api.get(`/api/listings/?${params.toString()}`);
+      const res = await api.get(`/api/properties/?${params.toString()}`);
       setListings(res.data);
     } catch (error) {
       console.error("Search failed", error);

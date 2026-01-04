@@ -34,6 +34,25 @@ class UserSerializer(serializers.ModelSerializer):
         except KYCVerification.DoesNotExist:
             return "NOT_STARTED"
 
+class PublicUserSerializer(serializers.ModelSerializer):
+    """
+    Limited User Serializer for public display (e.g. Property Owner).
+    Excludes sensitive contact info like phone_number and email.
+    """
+    full_name = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = User
+        fields = [
+            'id', 
+            'first_name', 
+            'last_name', 
+            'full_name', 
+            'is_active_seller', 
+            'is_active_broker'
+        ]
+
+
 class KYCVerificationSerializer(serializers.ModelSerializer):
     """
     Serializer for Sandbox KYC data.

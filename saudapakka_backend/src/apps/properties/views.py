@@ -58,9 +58,10 @@ class PropertyViewSet(viewsets.ModelViewSet):
             return base_query.order_by('-created_at')
         
         if user.is_authenticated:
+            # Allow users to see VERIFIED properties AND their own properties (regardless of status)
             return base_query.filter(
                 Q(verification_status='VERIFIED') | Q(owner=user)
-            ).distinct().order_by('-created_at')
+            ).order_by('-created_at').distinct()
             
         return base_query.filter(verification_status='VERIFIED').order_by('-created_at')
 
@@ -86,19 +87,34 @@ class PropertyViewSet(viewsets.ModelViewSet):
         if property_obj.owner != request.user and not request.user.is_staff:
             return Response({"error": "Unauthorized"}, status=403)
 
-        image_file = request.data.get('image')
-        is_thumbnail = request.data.get('is_thumbnail', False) # Option to set as main image
-
-        if not image_file:
-            return Response({"error": "No file uploaded"}, status=400)
-
-        photo = PropertyImage.objects.create(
-            property=property_obj, 
-            image=image_file, 
-            is_thumbnail=is_thumbnail
-        )
+        serializer = PropertyImageSerializer(data=request.data, context={'request': request})
         
-        return Response(PropertyImageSerializer(photo).data, status=201)
+        if serializer.is_valid():
+            serializer.save(property=property_obj)
+            return Response(serializer.data, status=201)
+            
+        return Response(serializer.errors, status=400)
+
+    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def get_contact_details(self, request, pk=None):
+        """
+        Secure endpoint to retrieve owner's contact details.
+        Only accessible by authenticated users.
+        """
+        property_obj = self.get_object()
+        
+        # In a real scenario, we might want to log who accessed whose contact info
+        # or implement a credit system/subscription check here.
+        
+        owner = property_obj.owner
+        contact_info = {
+            "id": owner.id,
+            "full_name": owner.full_name,
+            "phone_number": owner.phone_number,
+            "email": owner.email,
+            "whatsapp_number": property_obj.whatsapp_number # This is on the property model itself
+        }
+        return Response(contact_info)
 
     # --- USER INTERACTIONS (SAVE/RECENT/HISTORY) ---
 
@@ -132,6 +148,15 @@ class PropertyViewSet(viewsets.ModelViewSet):
         props = [r.property for r in recent]
         serializer = self.get_serializer(props, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def my_listings(self, request):
+        """Retrieve properties listed by the current user (Seller/Broker)"""
+        listings = Property.objects.filter(owner=request.user).order_by('-created_at')
+        serializer = self.get_serializer(listings, many=True)
+        return Response(serializer.data)
+
+
     
 
 

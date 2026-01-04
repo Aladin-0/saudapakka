@@ -41,13 +41,12 @@ function SellerDashboard({ user }: { user: any }) {
     // Fetch stats specific to seller
     const fetchData = async () => {
       try {
-        const res = await api.get("/api/listings/");
-        // Filter my listings
-        const myListings = res.data.filter((item: any) => item.owner_name === user.full_name);
+        const res = await api.get("/api/properties/my_listings/");
+        const myListings = res.data;
 
         setStats({
           totalListings: myListings.length,
-          totalViews: myListings.reduce((acc: number, item: any) => acc + (item.views || 0), 0), // Assuming API has views
+          totalViews: myListings.reduce((acc: number, item: any) => acc + (item.views || 0), 0),
           pending: myListings.filter((item: any) => item.verification_status === "PENDING").length
         });
       } catch (e) { console.error(e); }
@@ -56,7 +55,7 @@ function SellerDashboard({ user }: { user: any }) {
   }, [user]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 mt-10">
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
@@ -116,7 +115,7 @@ function BuyerDashboard({ user }: { user: any }) {
   useEffect(() => {
     const fetchSaved = async () => {
       try {
-        const res = await api.get("/api/listings/my_saved/");
+        const res = await api.get("/api/properties/my_saved/");
         setSavedCount(res.data.length);
       } catch (e) { }
     };

@@ -3,6 +3,14 @@
 import { useState, useEffect } from "react";
 import api from "@/lib/axios";
 import { useAuth } from "@/hooks/use-auth";
+import UserVerificationModal from "@/components/admin/UserVerificationModal";
+import {
+    MagnifyingGlassIcon,
+    FunnelIcon,
+    CheckBadgeIcon,
+    ShieldCheckIcon,
+    UserIcon
+} from "@heroicons/react/24/outline";
 
 type User = {
     id: string;
@@ -12,13 +20,19 @@ type User = {
     is_active_seller: boolean;
     is_active_broker: boolean;
     kyc_status: string;
+    verified_at?: string;
 };
 
 export default function AdminUsersPage() {
     const { user } = useAuth();
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState("ALL"); // ALL, BROKER, SELLER
+    const [filter, setFilter] = useState("ALL");
+    const [search, setSearch] = useState("");
+
+    // Modal State
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
 
     useEffect(() => {
         fetchUsers();
@@ -36,90 +50,157 @@ export default function AdminUsersPage() {
         }
     };
 
-    const toggleBlockUser = async (userId: string, currentStatus: boolean) => {
-        // Placeholder for blocking functionality
-        alert("Block/Unblock feature coming soon!");
+    const handleVerifyClick = (userId: string) => {
+        setSelectedUserId(userId);
+        setIsVerifyModalOpen(true);
     };
 
+    const handleVerificationComplete = () => {
+        fetchUsers(); // Refresh list to show new status
+    };
+
+    const filteredUsers = users.filter(u =>
+        u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+        u.email.toLowerCase().includes(search.toLowerCase())
+    );
+
     if (!user?.is_staff) {
-        return <div className="p-8 text-center text-red-600">Access Denied. Admins Only.</div>;
+        return <div className="p-10 text-center text-red-500 font-bold">⛔ Admin Access Required</div>;
     }
 
     return (
-        <div className="p-6 max-w-7xl mx-auto">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
-                <div className="flex gap-2">
-                    <select
-                        value={filter}
-                        onChange={(e) => setFilter(e.target.value)}
-                        className="border p-2 rounded-lg bg-white"
+        <div className="p-8 max-w-7xl mx-auto min-h-screen bg-gray-50/50">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">User Management</h1>
+                    <p className="text-gray-500 mt-1">Monitor users, verified badges, and KYC requests.</p>
+                </div>
+                <div className="flex items-center gap-3 bg-white p-1.5 rounded-xl shadow-sm border border-gray-200">
+                    <button
+                        onClick={() => setFilter("ALL")}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === 'ALL' ? 'bg-gray-900 text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
                     >
-                        <option value="ALL">All Users</option>
-                        <option value="BROKER">Brokers Only</option>
-                        <option value="SELLER">Sellers Only</option>
-                    </select>
+                        All
+                    </button>
+                    <button
+                        onClick={() => setFilter("BROKER")}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === 'BROKER' ? 'bg-gray-900 text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
+                    >
+                        Brokers
+                    </button>
+                    <button
+                        onClick={() => setFilter("SELLER")}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === 'SELLER' ? 'bg-gray-900 text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
+                    >
+                        Sellers
+                    </button>
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KYC Status</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {loading ? (
-                            <tr>
-                                <td colSpan={4} className="p-8 text-center text-gray-500">Loading users...</td>
-                            </tr>
-                        ) : users.length === 0 ? (
-                            <tr>
-                                <td colSpan={4} className="p-8 text-center text-gray-500">No users found.</td>
-                            </tr>
-                        ) : (
-                            users.map((u) => (
-                                <tr key={u.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center">
-                                            <div className="ml-4">
-                                                <div className="text-sm font-medium text-gray-900">{u.full_name}</div>
-                                                <div className="text-sm text-gray-500">{u.email}</div>
-                                                <div className="text-xs text-gray-400">{u.phone_number}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex flex-col gap-1">
-                                            {u.is_active_broker && <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 w-fit">Broker</span>}
-                                            {u.is_active_seller && <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 w-fit">Seller</span>}
-                                            {!u.is_active_broker && !u.is_active_seller && <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 w-fit">User</span>}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${u.kyc_status === 'VERIFIED' ? 'bg-green-100 text-green-800' :
-                                            u.kyc_status === 'INITIATED' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
-                                            }`}>
-                                            {u.kyc_status}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <button
-                                            onClick={() => toggleBlockUser(u.id, true)}
-                                            className="text-red-600 hover:text-red-900 font-medium"
-                                        >
-                                            Block
-                                        </button>
-                                    </td>
-                                </tr>
-                            )))}
-                    </tbody>
-                </table>
+            {/* Search & Stats Bar */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className="md:col-span-4 relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Search users by name or email..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm shadow-sm transition-all"
+                    />
+                </div>
             </div>
+
+            {/* Users Table */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-100">
+                        <thead className="bg-gray-50/80">
+                            <tr>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User Details</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">KYC Status</th>
+                                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-50">
+                            {loading ? (
+                                <tr><td colSpan={4} className="p-10 text-center text-gray-400">Loading directory...</td></tr>
+                            ) : filteredUsers.length === 0 ? (
+                                <tr><td colSpan={4} className="p-10 text-center text-gray-400">No users found matching your criteria.</td></tr>
+                            ) : (
+                                filteredUsers.map((u) => (
+                                    <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center">
+                                                <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-600 font-bold border border-blue-200">
+                                                    {u.full_name?.charAt(0) || u.email.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div className="ml-4">
+                                                    <div className="text-sm font-semibold text-gray-900">{u.full_name || "Unnamed User"}</div>
+                                                    <div className="text-sm text-gray-500">{u.email}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex flex-col gap-1 items-start">
+                                                {u.is_active_broker && (
+                                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                                                        <ShieldCheckIcon className="w-3 h-3" /> Broker
+                                                    </span>
+                                                )}
+                                                {u.is_active_seller && (
+                                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                        <UserIcon className="w-3 h-3" /> Seller
+                                                    </span>
+                                                )}
+                                                {!u.is_active_broker && !u.is_active_seller && (
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                                        Consumer
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${u.kyc_status === 'VERIFIED' ? 'bg-green-50 text-green-700 border-green-200' :
+                                                    u.kyc_status === 'REJECTED' ? 'bg-red-50 text-red-700 border-red-200' :
+                                                        'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                                }`}>
+                                                <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${u.kyc_status === 'VERIFIED' ? 'bg-green-500' :
+                                                        u.kyc_status === 'REJECTED' ? 'bg-red-500' :
+                                                            'bg-yellow-500'
+                                                    }`}></span>
+                                                {u.kyc_status || 'NOT STARTED'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                            <button
+                                                onClick={() => handleVerifyClick(u.id)}
+                                                className="text-indigo-600 hover:text-indigo-900 font-medium hover:underline decoration-2 underline-offset-2"
+                                            >
+                                                Verify Docs
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Verification Modal */}
+            {selectedUserId && (
+                <UserVerificationModal
+                    userId={selectedUserId}
+                    isOpen={isVerifyModalOpen}
+                    onClose={() => setIsVerifyModalOpen(false)}
+                    onStatusChange={handleVerificationComplete}
+                />
+            )}
         </div>
     );
 }

@@ -25,9 +25,10 @@ class Property(models.Model):
         ('VILLA', 'Villa/House'),
         ('LAND', 'Plot/Land'),
         ('STUDIO', 'Studio'),
-        ('PENTHOUSE', 'Penthouse')
+        ('PENTHOUSE', 'Penthouse'),
+        ('OFFICE', 'Office Space')
     ])
-    bhk_config = models.IntegerField(default=1, choices=[(1, '1 BHK'), (2, '2 BHK'), (3, '3 BHK'), (4, '4+ BHK')])
+    bhk_config = models.IntegerField(default=1, choices=[(1, '1 BHK'), (2, '2 BHK'), (3, '3 BHK'), (4, '4+ BHK'), (5, '5+ BHK')])
     bathrooms = models.IntegerField(default=1)
     balconies = models.IntegerField(default=0)
     

@@ -2,7 +2,8 @@ from django.urls import path
 from .views import (
     SendOtpView, VerifyOtpView, InitiateKYCView, 
     VerifyKYCStatusView, UpgradeRoleView, SearchProfileView, 
-    AdminDashboardStats, UserProfileView, KYCCallbackView
+    AdminDashboardStats, UserProfileView, KYCCallbackView,
+    AdminUserDocumentView, AdminVerifyUserView
 )
 
 urlpatterns = [
@@ -15,4 +16,8 @@ urlpatterns = [
     path('kyc/initiate/', InitiateKYCView.as_view(), name='kyc-initiate'),
     path('kyc/callback/', KYCCallbackView.as_view(), name='kyc-callback'),
     path('kyc/verify-status/', VerifyKYCStatusView.as_view(), name='kyc-verify-status'),
+    
+    # Admin Routes
+    path('admin/users/<uuid:user_id>/documents/', AdminUserDocumentView.as_view(), name='admin-user-docs'),
+    path('admin/users/<uuid:user_id>/verify/', AdminVerifyUserView.as_view(), name='admin-user-verify'),
 ]

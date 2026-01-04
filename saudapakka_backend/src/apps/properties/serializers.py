@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Property, PropertyImage
-from apps.users.serializers import UserSerializer
+from apps.users.serializers import UserSerializer, PublicUserSerializer
 
 class PropertyImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,7 +10,7 @@ class PropertyImageSerializer(serializers.ModelSerializer):
 class PropertySerializer(serializers.ModelSerializer):
     # --- Nested Representations ---
     images = PropertyImageSerializer(many=True, read_only=True)
-    owner_details = UserSerializer(source='owner', read_only=True)
+    owner_details = PublicUserSerializer(source='owner', read_only=True)
     
     # --- Human Readable Choice Labels (For Frontend UI) ---
     property_type_display = serializers.CharField(source='get_property_type_display', read_only=True)
