@@ -1,9 +1,10 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-// Point to your Docker Backend
+// Production: Use relative paths (handled by Next.js rewrites or reverse proxy)
+// The API URL is configured via NEXT_PUBLIC_API_URL environment variable
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || '',
 });
 
 // Automatically add the Token to every request if it exists

@@ -1,22 +1,39 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  webpack: (config) => {
-    config.watchOptions = {
-      poll: 1000,   // Check for changes every second
-      aggregateTimeout: 300,
-    }
-    return config
+  // Production: Enable standalone output for Docker
+  output: 'standalone',
+
+  // Production environment variables
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://saudapakka.com/api',
   },
+
   images: {
     remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "saudapakka.com",
+      },
       {
         protocol: "http",
         hostname: "localhost",
       },
+      {
+        protocol: "http",
+        hostname: "72.61.246.159",
+      },
     ],
   },
+
+  // Disable x-powered-by header for security
+  poweredByHeader: false,
+
+  // Production optimizations
+  reactStrictMode: true,
+
+  // Compression handled by nginx/reverse proxy
+  compress: true,
 };
 
 export default nextConfig;
