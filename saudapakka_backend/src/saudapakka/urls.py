@@ -8,14 +8,9 @@ from django.http import JsonResponse
 
 def health_check(request):
     return JsonResponse({"status": "healthy"})
-# from apps.properties.views_admin import AdminPropertyViewSet
-# from apps.users.views_admin import AdminUserViewSet
-
-# admin_router = DefaultRouter()
-# admin_router.register(r'properties', AdminPropertyViewSet, basename='admin-properties')
-# admin_router.register(r'users', AdminUserViewSet, basename='admin-users')
 
 urlpatterns = [
+    path('health/', lambda r: JsonResponse({'status': 'healthy'}), name='health'),
     path('admin/', admin.site.urls),
     path('api/', include('apps.users.urls')),
     path('api/', include('apps.properties.urls')), # <-- UNCOMMENT THIS NOW
