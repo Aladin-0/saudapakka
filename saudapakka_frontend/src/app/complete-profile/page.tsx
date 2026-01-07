@@ -90,8 +90,7 @@ export default function CompleteProfilePage() {
                 <div className="relative group">
                   <User className="absolute left-4 top-3.5 h-4 w-4 text-gray-400 group-focus-within:text-accent-green transition-colors" />
                   <Input
-                    placeholder="Rahul"
-                    className="pl-10 h-11 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white focus:border-accent-green focus:ring-4 focus:ring-accent-green/10 transition-all"
+
                     value={formData.first_name}
                     onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                   />
@@ -101,8 +100,7 @@ export default function CompleteProfilePage() {
                 <label className="text-[10px] font-bold text-gray-500 uppercase ml-1 tracking-wider">Last Name</label>
                 <div className="relative group">
                   <Input
-                    placeholder="Patil"
-                    className="pl-4 h-11 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white focus:border-accent-green focus:ring-4 focus:ring-accent-green/10 transition-all"
+
                     value={formData.last_name}
                     onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                   />
@@ -115,8 +113,7 @@ export default function CompleteProfilePage() {
               <div className="relative group">
                 <Phone className="absolute left-4 top-3.5 h-4 w-4 text-gray-400 group-focus-within:text-accent-green transition-colors" />
                 <Input
-                  placeholder="+91 98765 43210"
-                  className="pl-10 h-11 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white focus:border-accent-green focus:ring-4 focus:ring-accent-green/10 transition-all"
+
                   value={formData.phone_number}
                   onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
                 />

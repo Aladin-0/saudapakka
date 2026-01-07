@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Property, PropertyImage
+from .models import Property, PropertyImage, PropertyFloorPlan
 from apps.users.serializers import UserSerializer, PublicUserSerializer
 
 class PropertyImageSerializer(serializers.ModelSerializer):
@@ -7,9 +7,15 @@ class PropertyImageSerializer(serializers.ModelSerializer):
         model = PropertyImage
         fields = ['id', 'image', 'is_thumbnail']
 
+class PropertyFloorPlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PropertyFloorPlan
+        fields = ['id', 'image', 'created_at']
+
 class PropertySerializer(serializers.ModelSerializer):
     # --- Nested Representations ---
     images = PropertyImageSerializer(many=True, read_only=True)
+    floor_plans = PropertyFloorPlanSerializer(many=True, read_only=True)
     owner_details = PublicUserSerializer(source='owner', read_only=True)
     
     # --- Human Readable Choice Labels (For Frontend UI) ---
@@ -53,7 +59,7 @@ class PropertySerializer(serializers.ModelSerializer):
             'is_vastu_compliant', 'has_intercom', 'has_piped_gas', 'has_wifi',
 
             # Media & Contact
-            'images', 'video_url', 'floor_plan', 'whatsapp_number', 
+            'images', 'video_url', 'floor_plan', 'floor_plans', 'whatsapp_number', 
             'listed_by', 'listed_by_display',
 
             # Legal Docs
@@ -66,16 +72,7 @@ class PropertySerializer(serializers.ModelSerializer):
             'created_at'
         ]
 
-    def validate(self, data):
-        """
-        Professional Validation: Ensure logical data consistency.
-        """
-        if data.get('carpet_area') and data.get('super_builtup_area'):
-            if data['carpet_area'] > data['super_builtup_area']:
-                raise serializers.ValidationError(
-                    {"carpet_area": "Carpet area cannot be larger than Super Built-up area."}
-                )
-        return data
+    # Removed custom validation for now to match revert request
     
 
     def validate_latitude(self, value):

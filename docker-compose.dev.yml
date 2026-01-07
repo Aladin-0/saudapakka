@@ -12,7 +12,7 @@ services:
       - CSRF_TRUSTED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
       - ALLOWED_HOSTS=localhost,127.0.0.1,backend
     volumes:
-      - ./saudapakka_backend/src:/app/src
+      - ./saudapakka_backend/src:/app
     ports:
       - "8000:8000"
 

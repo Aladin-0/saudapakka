@@ -6,7 +6,7 @@ export default function Footer() {
     <footer className="bg-dark-green text-white py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-          
+
           {/* 1. Company Info */}
           <div>
             <h3 className="text-2xl font-bold mb-4">
@@ -56,15 +56,15 @@ export default function Footer() {
             <ul className="space-y-4 text-gray-300">
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-accent-green" />
-                <span>+91 98765 43210</span>
+                <span>+91 80555 44644</span>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-accent-green" />
-                <span>info@saudapakka.com</span>
+                <span>sampark@saudapakka.com</span>
               </li>
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-accent-green mt-1" />
-                <span>Aurangabad, Maharashtra,<br/>India</span>
+                <span>Chhatrapati Sambhajinagar, Maharashtra,<br />India</span>
               </li>
             </ul>
           </div>
@@ -72,7 +72,18 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
-          <p>© 2025 SaudaPakka. All rights reserved.</p>
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            <p>© 2025 SaudaPakka. All rights reserved.</p>
+            <span className="hidden md:block text-gray-600">|</span>
+            <a
+              href="https://zaikron.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-accent-green transition-colors"
+            >
+              Designed & Developed by Zaikron
+            </a>
+          </div>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-white transition-colors">Terms of Service</a>

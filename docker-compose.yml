@@ -26,7 +26,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./saudapakka_backend/src:/app/src
+      - ./saudapakka_backend/src:/app
       - ./saudapakka_backend/entrypoint.sh:/app/entrypoint.sh
       - properties_data:/app/properties
       - media_data:/app/media

@@ -1,11 +1,22 @@
 from django.contrib import admin
-from .models import Property
+from .models import Property, PropertyImage, PropertyFloorPlan
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+class PropertyImageInline(admin.TabularInline):
+    model = PropertyImage
+    extra = 1
+
+class PropertyFloorPlanInline(admin.TabularInline):
+    model = PropertyFloorPlan
+    extra = 1
+    verbose_name = "Floor Plan"
+    verbose_name_plural = "Floor Plans (Multiple)"
+
 @admin.register(Property)
 class PropertyAdmin(admin.ModelAdmin):
+    inlines = [PropertyImageInline, PropertyFloorPlanInline]
     # 1. Columns shown in the list view
     list_display = (
         'title', 
@@ -32,7 +43,7 @@ class PropertyAdmin(admin.ModelAdmin):
     # 4. Organizing the Detail Form into Sections
     fieldsets = (
         ('Basic Information', {
-            'fields': ('owner', 'title', 'project_name', 'property_type', 'verification_status')
+            'fields': ('owner', 'title', 'description', 'project_name', 'property_type', 'verification_status')
         }),
         ('Configuration', {
             'fields': ('bhk_config', 'bathrooms', 'balconies', 'furnishing_status')
@@ -54,7 +65,10 @@ class PropertyAdmin(admin.ModelAdmin):
             )
         }),
         ('Media & Contact', {
-            'fields': ('video_url', 'whatsapp_number', 'listed_by')
+            'fields': ('video_url', 'floor_plan', 'whatsapp_number', 'listed_by')
+        }),
+        ('Verification Documents', {
+            'fields': ('doc_7_12', 'doc_mojani')
         }),
     )
 

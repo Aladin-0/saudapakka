@@ -14,12 +14,15 @@ class Property(models.Model):
     owner = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='properties')
     
     # --- 1. Core Configuration ---
+    # --- 1. Core Configuration ---
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
+    
     listing_type = models.CharField(max_length=10, choices=[
         ('SALE', 'Sell'),
         ('RENT', 'Rent')
     ], default='SALE')
+
     property_type = models.CharField(max_length=50, choices=[
         ('FLAT', 'Flat/Apartment'),
         ('VILLA', 'Villa/House'),
@@ -28,6 +31,7 @@ class Property(models.Model):
         ('PENTHOUSE', 'Penthouse'),
         ('OFFICE', 'Office Space')
     ])
+
     bhk_config = models.IntegerField(default=1, choices=[(1, '1 BHK'), (2, '2 BHK'), (3, '3 BHK'), (4, '4+ BHK'), (5, '5+ BHK')])
     bathrooms = models.IntegerField(default=1)
     balconies = models.IntegerField(default=0)
@@ -67,8 +71,6 @@ class Property(models.Model):
         ('NORTH_EAST', 'North-East'), ('SOUTH_EAST', 'South-East'),
         ('NORTH_WEST', 'North-West'), ('SOUTH_WEST', 'South-West')
     ], null=True, blank=True)
-
-    # ... (Continued in Step 2)
 
     # --- 5. Status & Ownership ---
     availability_status = models.CharField(max_length=20, choices=[
@@ -125,6 +127,11 @@ class PropertyImage(models.Model):
     property = models.ForeignKey(Property, related_name='images', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='properties/')
     is_thumbnail = models.BooleanField(default=False)
+
+class PropertyFloorPlan(models.Model):
+    property = models.ForeignKey(Property, related_name='floor_plans', on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='properties/floor_plans/')
+    created_at = models.DateTimeField(auto_now_add=True)
 
 # --- User Interactions ---
 class SavedProperty(models.Model):

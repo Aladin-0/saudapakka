@@ -54,7 +54,7 @@ function SearchResultsContent() {
     if (filters.type !== "ALL") params.set("type", filters.type);
     if (filters.propertyType !== "ALL") params.set("property", filters.propertyType);
     if (filters.maxPrice) params.set("price", filters.maxPrice);
-    
+
     router.push(`/search?${params.toString()}`);
   };
 
@@ -70,40 +70,40 @@ function SearchResultsContent() {
 
         <div className="max-w-7xl mx-auto relative z-10">
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-8 text-center">
-             Results for <span className="text-accent-green">"{filters.query || "All Properties"}"</span>
+            Results for <span className="text-accent-green">"{filters.query || "All Properties"}"</span>
           </h1>
 
           {/* Glass Filter Bar */}
           <div className="glass-effect p-4 rounded-3xl shadow-xl max-w-5xl mx-auto border border-white/20">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              
+
               {/* Search Input */}
               <div className="relative md:col-span-1">
                 <Search className="absolute left-3 top-3.5 text-gray-500 w-4 h-4" />
-                <input 
-                  type="text" 
-                  placeholder="City or Locality..." 
+                <input
+                  type="text"
+                  placeholder="City or Locality..."
                   value={filters.query}
-                  onChange={(e) => setFilters({...filters, query: e.target.value})}
+                  onChange={(e) => setFilters({ ...filters, query: e.target.value })}
                   className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-100 focus:border-accent-green outline-none"
                 />
               </div>
 
               {/* Listing Type */}
-              <select 
+              <select
                 value={filters.type}
-                onChange={(e) => setFilters({...filters, type: e.target.value})}
+                onChange={(e) => setFilters({ ...filters, type: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-accent-green outline-none bg-white"
               >
                 <option value="ALL">Buy / Rent</option>
-                <option value="SELL">Buy (Sell)</option>
+                <option value="SELL">Buy</option>
                 <option value="RENT">Rent</option>
               </select>
 
               {/* Property Type */}
-              <select 
+              <select
                 value={filters.propertyType}
-                onChange={(e) => setFilters({...filters, propertyType: e.target.value})}
+                onChange={(e) => setFilters({ ...filters, propertyType: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-accent-green outline-none bg-white"
               >
                 <option value="ALL">All Property Types</option>
@@ -113,7 +113,7 @@ function SearchResultsContent() {
               </select>
 
               {/* Search Button */}
-              <button 
+              <button
                 onClick={handleFilterSubmit}
                 className="w-full bg-accent-green hover:bg-primary-green text-white font-semibold py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
               >
@@ -134,15 +134,15 @@ function SearchResultsContent() {
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-             {[1,2,3].map(i => <div key={i} className="h-96 bg-gray-200 rounded-2xl animate-pulse"></div>)}
+            {[1, 2, 3].map(i => <div key={i} className="h-96 bg-gray-200 rounded-2xl animate-pulse"></div>)}
           </div>
         ) : listings.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
-             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Home className="w-8 h-8 text-gray-400" />
-             </div>
-             <h3 className="text-xl font-bold text-gray-900">No properties found</h3>
-             <p className="text-gray-500 mt-2">Try adjusting your filters.</p>
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Home className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900">No properties found</h3>
+            <p className="text-gray-500 mt-2">Try adjusting your filters.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

@@ -10,6 +10,7 @@ import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Notification } from "@/components/ui/notification";
 import {
   CheckCircle, MapPin, IndianRupee, Home, FileText, Share2, Heart,
   Phone, Calendar, Bed, Bath, Ruler, Building, Car, Shield, Zap,
@@ -76,10 +77,16 @@ export default function PropertyDetailsPage() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
 
-  // Contact Owner State
   const [showContactModal, setShowContactModal] = useState(false);
   const [contactDetails, setContactDetails] = useState<any>(null);
   const [contactLoading, setContactLoading] = useState(false);
+
+  // Notification State
+  const [notification, setNotification] = useState({ show: false, message: "", type: "info" as "info" | "success" | "error" });
+
+  const showNotify = (message: string, type: "info" | "success" | "error" = "info") => {
+    setNotification({ show: true, message, type });
+  };
 
   useEffect(() => {
     if (id) {
@@ -115,7 +122,7 @@ export default function PropertyDetailsPage() {
       await api.post(`/api/properties/${id}/save_property/`);
       setIsSaved(!isSaved);
     } catch (error) {
-      alert("Please login to save properties.");
+      showNotify("Please login to save properties.", "error");
     }
   };
 
@@ -163,7 +170,7 @@ export default function PropertyDetailsPage() {
       setShowContactModal(true);
     } catch (error) {
       console.error("Failed to fetch contact details", error);
-      alert("Could not fetch contact details. Please try again.");
+      showNotify("Could not fetch contact details. Please try again.", "error");
     } finally {
       setContactLoading(false);
     }
@@ -183,7 +190,7 @@ export default function PropertyDetailsPage() {
 
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href);
-    alert("Link copied to clipboard!");
+    showNotify("Link copied to clipboard!", "success");
     setShowShareModal(false);
   };
 
@@ -363,12 +370,22 @@ export default function PropertyDetailsPage() {
                       <span>{property.locality}, {property.city}</span>
                     </p>
                   </div>
-                  <div className="flex gap-1.5 flex-shrink-0">
-                    <Button variant="ghost" size="icon" onClick={handleShare} className="h-9 w-9 rounded-full">
-                      <Share2 className="w-4 h-4 text-gray-500" />
+                  <div className="flex gap-2 flex-shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleShare}
+                      className="h-10 w-10 rounded-full bg-white shadow-sm border border-gray-100 text-gray-700 hover:text-[#4A9B6D] hover:bg-gray-50 transition-all"
+                    >
+                      <Share2 className="w-5 h-5" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={toggleSave} className="h-9 w-9 rounded-full">
-                      <Heart className={`w-4 h-4 ${isSaved ? "fill-red-500 text-red-500" : "text-gray-500"}`} />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={toggleSave}
+                      className={`h-10 w-10 rounded-full bg-white shadow-sm border border-gray-100 transition-all ${isSaved ? "text-red-500 hover:bg-red-50" : "text-gray-700 hover:text-red-500 hover:bg-gray-50"}`}
+                    >
+                      <Heart className={`w-5 h-5 ${isSaved ? "fill-red-500" : ""}`} />
                     </Button>
                   </div>
                 </div>
@@ -404,12 +421,25 @@ export default function PropertyDetailsPage() {
                         <span>{property.address_line || `${property.locality}, ${property.city}`}</span>
                       </p>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="icon" onClick={toggleSave}>
-                        <Heart className={`w-6 h-6 ${isSaved ? "fill-red-500 text-red-500" : "text-gray-500"}`} />
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={toggleSave}
+                        className={`h-12 px-6 rounded-2xl border transition-all duration-300 font-semibold shadow-sm hover:shadow-lg active:scale-95 ${isSaved
+                          ? "bg-gradient-to-br from-red-50 to-white border-red-200 text-red-600 hover:from-red-100 hover:to-red-50"
+                          : "bg-white border-gray-200 text-gray-700 hover:border-red-200 hover:text-red-600 hover:bg-red-50/50"
+                          }`}
+                      >
+                        <Heart className={`w-5 h-5 mr-2.5 transition-transform duration-300 ${isSaved ? "fill-red-600 scale-110" : "group-hover:scale-110"}`} />
+                        {isSaved ? "Saved" : "Save"}
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={handleShare}>
-                        <Share2 className="w-6 h-6 text-gray-500" />
+                      <Button
+                        variant="outline"
+                        onClick={handleShare}
+                        className="h-12 px-6 rounded-2xl border border-gray-200 bg-white text-gray-700 hover:border-[#4A9B6D] hover:text-[#4A9B6D] hover:bg-[#E8F5E9]/30 transition-all duration-300 font-semibold shadow-sm hover:shadow-lg active:scale-95"
+                      >
+                        <Share2 className="w-5 h-5 mr-2.5" />
+                        Share
                       </Button>
                     </div>
                   </div>
@@ -523,17 +553,71 @@ export default function PropertyDetailsPage() {
                   </Button>
 
                   <div className="grid grid-cols-2 gap-2.5">
-                    <Button variant="outline" className="border-2 border-[#4A9B6D] text-[#4A9B6D] py-3 rounded-xl font-semibold hover:bg-[#E8F5E9]/50 transition-all flex items-center justify-center gap-2 text-sm">
+                    <Button
+                      variant="outline"
+                      onClick={() => showNotify("Schedule feature coming soon!", "info")}
+                      className="border-2 border-[#4A9B6D] text-[#4A9B6D] py-3 rounded-xl font-semibold hover:bg-[#E8F5E9]/50 transition-all flex items-center justify-center gap-2 text-sm"
+                    >
                       <Calendar className="w-4 h-4" />
                       Schedule
                     </Button>
-                    <Button variant="outline" className="border-2 border-[#2D5F3F] text-[#2D5F3F] py-3 rounded-xl font-semibold hover:bg-[#E8F5E9]/50 transition-all flex items-center justify-center gap-2 text-sm">
-                      <MessageCircle className="w-4 h-4" />
-                      Message
-                    </Button>
+                    <a
+                      href={property.whatsapp_number
+                        ? `https://wa.me/${property.whatsapp_number.replace(/\D/g, '')}?text=Hi, I'm interested in ${property.title}`
+                        : `https://wa.me/${property.owner_phone_number?.replace(/\D/g, '') || ''}?text=Hi, I'm interested in ${property.title}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1"
+                    >
+                      <Button variant="outline" className="w-full border-2 border-[#2D5F3F] text-[#2D5F3F] py-3 rounded-xl font-semibold hover:bg-[#E8F5E9]/50 transition-all flex items-center justify-center gap-2 text-sm">
+                        <MessageCircle className="w-4 h-4" />
+                        Message
+                      </Button>
+                    </a>
                   </div>
                 </div>
               </div>
+
+              {/* Floor Plans */}
+              {(property.floor_plans?.length > 0 || property.floor_plan) && (
+                <div className="bg-white sm:rounded-2xl p-4 sm:p-6 md:p-8 sm:shadow-lg mb-4 sm:mb-6">
+                  <h2 className="text-base sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 sm:mb-6">
+                    {property.floor_plans?.length > 1 ? 'Floor Plans' : 'Floor Plan'}
+                  </h2>
+
+                  {property.floor_plans?.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {property.floor_plans.map((fp: any) => (
+                        <div key={fp.id} className="rounded-xl overflow-hidden border border-gray-100 bg-gray-50 group">
+                          <img
+                            src={fp.image}
+                            alt="Floor Plan"
+                            className="w-full h-auto object-contain max-h-[400px] group-hover:scale-105 transition-transform duration-500 cursor-zoom-in"
+                            onClick={() => {
+                              setActiveImage(fp.image);
+                              setShowImageModal(true);
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    // Fallback for single legacy floor plan
+                    <div className="rounded-xl overflow-hidden border border-gray-100 bg-gray-50">
+                      <img
+                        src={property.floor_plan}
+                        alt="Floor Plan"
+                        className="w-full h-auto object-contain max-h-[500px] hover:scale-105 transition-transform duration-500 cursor-zoom-in"
+                        onClick={() => {
+                          setActiveImage(property.floor_plan);
+                          setShowImageModal(true);
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Features & Amenities */}
               {getAmenitiesList(property).length > 0 && (
@@ -619,7 +703,7 @@ export default function PropertyDetailsPage() {
                   </p>
                 </div>
 
-                {/* Nearby Places */}
+                {/* Nearby Places
                 <div>
                   <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">What's Nearby</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 md:gap-4">
@@ -651,7 +735,7 @@ export default function PropertyDetailsPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
 
               {/* Property ID - Mobile */}
@@ -712,10 +796,28 @@ export default function PropertyDetailsPage() {
                       {contactLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Phone className="w-5 h-5" />}
                       Contact Owner
                     </Button>
-                    <Button variant="outline" className="w-full border-2 border-[#4A9B6D] text-[#4A9B6D] py-2 mt-2 rounded-xl font-semibold hover:bg-[#E8F5E9]/50 transition-all flex items-center justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => showNotify("Schedule feature coming soon!", "info")}
+                      className="w-full border-2 border-[#4A9B6D] text-[#4A9B6D] py-2 mt-2 rounded-xl font-semibold hover:bg-[#E8F5E9]/50 transition-all flex items-center justify-center gap-2"
+                    >
                       <Calendar className="w-5 h-5" />
                       Schedule Visit
                     </Button>
+                    <a
+                      href={property.whatsapp_number
+                        ? `https://wa.me/${property.whatsapp_number.replace(/\D/g, '')}?text=Hi, I'm interested in ${property.title}`
+                        : `https://wa.me/${property.owner_phone_number?.replace(/\D/g, '') || ''}?text=Hi, I'm interested in ${property.title}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full"
+                    >
+                      <Button variant="outline" className="w-full border-2 border-[#25D366] text-[#25D366] hover:bg-[#25D366]/10 py-2 mt-2 rounded-xl font-semibold transition-all flex items-center justify-center gap-2">
+                        <MessageCircle className="w-5 h-5" />
+                        Chat on WhatsApp
+                      </Button>
+                    </a>
                     <Button variant="outline" className="w-full border-2 border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all flex items-center justify-center gap-2" onClick={toggleSave}>
                       <Heart className={`w-5 h-5 ${isSaved ? "fill-red-500 text-red-500" : ""}`} />
                       {isSaved ? "Saved" : "Save Property"}
@@ -746,130 +848,158 @@ export default function PropertyDetailsPage() {
                     </div>
                   )}
 
-                  {/* Download & Report */}
-                  <div className="mt-6 pt-6 border-t border-gray-200 flex gap-2">
-                    <Button variant="ghost" className="flex-1 text-sm" onClick={() => window.print()}>
-                      <Download className="w-4 h-4 mr-2" />
-                      Download
-                    </Button>
-                    <Button variant="ghost" className="flex-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50">
-                      <Flag className="w-4 h-4 mr-2" />
-                      Report
-                    </Button>
-                  </div>
+
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </div >
 
-      {/* Image Modal */}
-      {showImageModal && (
-        <div className="fixed inset-0 bg-black/95 z-[2000] flex items-center justify-center p-4">
-          <button
-            onClick={() => setShowImageModal(false)}
-            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-[2010]"
-          >
-            <X className="w-8 h-8" />
-          </button>
-          <div className="relative max-w-6xl w-full">
-            <img
-              src={activeImage}
-              alt="Property"
-              className="w-full h-auto max-h-[90vh] object-contain"
-            />
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm text-white px-4 py-2 rounded-full">
-              {activeImageIndex + 1} / {property.images?.length || 1}
+      {/* Image Modal - Carousel */}
+      {
+        showImageModal && (
+          <div className="fixed inset-0 bg-black/95 z-[2000] flex items-center justify-center p-4">
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-[2010] p-2 bg-black/50 rounded-full"
+            >
+              <X className="w-8 h-8" />
+            </button>
+
+            <div className="relative w-full h-full flex items-center justify-center">
+              {/* Prev Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  prevImage();
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-white p-2 rounded-full bg-black/50 hover:bg-black/70 transition-all z-[2010]"
+                disabled={activeImageIndex === 0}
+              >
+                <ChevronLeft className="w-8 h-8" />
+              </button>
+
+              <img
+                src={activeImage}
+                alt="Property"
+                className="max-w-full max-h-[90vh] object-contain select-none"
+              />
+
+              {/* Next Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  nextImage();
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white p-2 rounded-full bg-black/50 hover:bg-black/70 transition-all z-[2010]"
+                disabled={property.images && activeImageIndex === property.images.length - 1}
+              >
+                <ChevronRight className="w-8 h-8" />
+              </button>
+
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium">
+                {activeImageIndex + 1} / {property.images?.length || 1}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Share Modal */}
-      {showShareModal && (
-        <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4" onClick={() => setShowShareModal(false)}>
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-xl font-bold mb-4">Share Property</h3>
-            <Button onClick={copyLink} className="w-full bg-[#2D5F3F] hover:bg-[#1B3A2C]">
-              <ExternalLink className="w-4 h-4 mr-2" />
-              Copy Link
-            </Button>
+      {
+        showShareModal && (
+          <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4" onClick={() => setShowShareModal(false)}>
+            <div className="bg-white rounded-2xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-xl font-bold mb-4">Share Property</h3>
+              <Button onClick={copyLink} className="w-full bg-[#2D5F3F] hover:bg-[#1B3A2C]">
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Copy Link
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Contact Owner Modal */}
-      {showContactModal && contactDetails && (
-        <div className="fixed inset-0 bg-black/60 z-[2010] flex items-end sm:items-center justify-center sm:p-4" onClick={() => setShowContactModal(false)}>
-          <div
-            className="bg-white w-full sm:w-auto sm:max-w-md rounded-t-2xl sm:rounded-2xl p-6 animate-slide-up sm:animate-in sm:fade-in sm:zoom-in duration-300"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900">Owner Contact Details</h3>
-              <button onClick={() => setShowContactModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 bg-[#E8F5E9] rounded-full flex items-center justify-center text-2xl font-bold text-[#2D5F3F]">
-                {contactDetails.full_name?.charAt(0) || "U"}
+      {
+        showContactModal && contactDetails && (
+          <div className="fixed inset-0 bg-black/60 z-[2010] flex items-end sm:items-center justify-center sm:p-4" onClick={() => setShowContactModal(false)}>
+            <div
+              className="bg-white w-full sm:w-auto sm:max-w-md rounded-t-2xl sm:rounded-2xl p-6 animate-slide-up sm:animate-in sm:fade-in sm:zoom-in duration-300"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Owner Contact Details</h3>
+                <button onClick={() => setShowContactModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
               </div>
-              <div>
-                <h4 className="text-lg font-bold text-gray-900">{contactDetails.full_name}</h4>
-                <p className="text-sm text-gray-500">Property Owner</p>
-              </div>
-            </div>
 
-            <div className="space-y-4">
-              <div className="p-4 bg-gray-50 rounded-xl flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
-                    <Phone className="w-5 h-5 text-[#2D5F3F]" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Mobile Number</p>
-                    <p className="text-base font-bold text-gray-900">{contactDetails.phone_number}</p>
-                  </div>
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 bg-[#E8F5E9] rounded-full flex items-center justify-center text-2xl font-bold text-[#2D5F3F]">
+                  {contactDetails.full_name?.charAt(0) || "U"}
                 </div>
-                <a href={`tel:${contactDetails.phone_number}`}>
-                  <Button size="sm" className="bg-[#2D5F3F] hover:bg-[#1B3A2C] rounded-lg">Call</Button>
-                </a>
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900">{contactDetails.full_name}</h4>
+                  <p className="text-sm text-gray-500">Property Owner</p>
+                </div>
               </div>
 
-              {contactDetails.whatsapp_number && (
-                <div className="p-4 bg-green-50 rounded-xl flex items-center justify-between border border-green-100">
+              <div className="space-y-4">
+                <div className="p-4 bg-gray-50 rounded-xl flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
-                      <MessageCircle className="w-5 h-5 text-green-600" />
+                      <Phone className="w-5 h-5 text-[#2D5F3F]" />
                     </div>
                     <div>
-                      <p className="text-xs text-green-700 font-medium">WhatsApp</p>
-                      <p className="text-base font-bold text-gray-900">{contactDetails.whatsapp_number}</p>
+                      <p className="text-xs text-gray-500 font-medium">Mobile Number</p>
+                      <p className="text-base font-bold text-gray-900">{contactDetails.phone_number}</p>
                     </div>
                   </div>
-                  <a
-                    href={`https://wa.me/${contactDetails.whatsapp_number.replace(/\D/g, '')}?text=Hi, I am interested in your property listed on SaudaPakka.`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white rounded-lg border-none">Chat</Button>
+                  <a href={`tel:${contactDetails.phone_number}`}>
+                    <Button size="sm" className="bg-[#2D5F3F] hover:bg-[#1B3A2C] rounded-lg">Call</Button>
                   </a>
                 </div>
-              )}
-            </div>
 
-            <div className="mt-6 text-center">
-              <p className="text-xs text-gray-400">
-                By contacting the owner, you agree to our Terms of Service and Privacy Policy.
-              </p>
+                {contactDetails.whatsapp_number && (
+                  <div className="p-4 bg-green-50 rounded-xl flex items-center justify-between border border-green-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
+                        <MessageCircle className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-green-700 font-medium">WhatsApp</p>
+                        <p className="text-base font-bold text-gray-900">{contactDetails.whatsapp_number}</p>
+                      </div>
+                    </div>
+                    <a
+                      href={`https://wa.me/${contactDetails.whatsapp_number.replace(/\D/g, '')}?text=Hi, I am interested in your property listed on SaudaPakka.`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white rounded-lg border-none">Chat</Button>
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 text-center">
+                <p className="text-xs text-gray-400">
+                  By contacting the owner, you agree to our Terms of Service and Privacy Policy.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
+      <Notification
+        show={notification.show}
+        message={notification.message}
+        type={notification.type}
+        onClose={() => setNotification({ ...notification, show: false })}
+      />
       <Footer />
     </>
   );
