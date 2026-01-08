@@ -50,7 +50,12 @@ class Property(models.Model):
     property_type = models.CharField(max_length=50, choices=PROPERTY_TYPE_CHOICES)
     sub_type = models.CharField(max_length=50, choices=SUB_TYPE_CHOICES, null=True, blank=True)
 
-    bhk_config = models.IntegerField(default=1, choices=[(1, '1 BHK'), (2, '2 BHK'), (3, '3 BHK'), (4, '4+ BHK'), (5, '5+ BHK')])
+    bhk_config = models.IntegerField(
+        default=0,
+        choices=[(0, 'N/A'), (1, '1 BHK'), (2, '2 BHK'), (3, '3 BHK'), (4, '4+ BHK'), (5, '5+ BHK')],
+        null=True, blank=True,
+        help_text="Number of bedrooms. Use 0 or N/A for plots/land/commercial properties."
+    )
     bathrooms = models.IntegerField(default=1)
     balconies = models.IntegerField(default=0)
     
@@ -117,19 +122,19 @@ class Property(models.Model):
     floor_plan = models.ImageField(upload_to='properties/floor_plans/', null=True, blank=True)
     
     # Verification Documents (Comprehensive List)
-    building_commencement_certificate = models.FileField(upload_to='properties/docs/', null=True, blank=False)
-    building_completion_certificate = models.FileField(upload_to='properties/docs/', null=True, blank=False)
-    layout_sanction = models.FileField(upload_to='properties/docs/', null=True, blank=False)
-    layout_order = models.FileField(upload_to='properties/docs/', null=True, blank=False)
-    na_order_or_gunthewari = models.FileField(upload_to='properties/docs/', null=True, blank=False)
-    mojani_nakasha = models.FileField(upload_to='properties/docs/', null=True, blank=False) # Renamed from doc_mojani
-    doc_7_12_or_pr_card = models.FileField(upload_to='properties/docs/', null=True, blank=False) # Renamed from doc_7_12
-    title_search_report = models.FileField(upload_to='properties/docs/', null=True, blank=False)
+    building_commencement_certificate = models.FileField(upload_to='properties/docs/', null=True, blank=False, max_length=255)
+    building_completion_certificate = models.FileField(upload_to='properties/docs/', null=True, blank=False, max_length=255)
+    layout_sanction = models.FileField(upload_to='properties/docs/', null=True, blank=False, max_length=255)
+    layout_order = models.FileField(upload_to='properties/docs/', null=True, blank=False, max_length=255)
+    na_order_or_gunthewari = models.FileField(upload_to='properties/docs/', null=True, blank=False, max_length=255)
+    mojani_nakasha = models.FileField(upload_to='properties/docs/', null=True, blank=False, max_length=255) # Renamed from doc_mojani
+    doc_7_12_or_pr_card = models.FileField(upload_to='properties/docs/', null=True, blank=False, max_length=255) # Renamed from doc_7_12
+    title_search_report = models.FileField(upload_to='properties/docs/', null=True, blank=False, max_length=255)
     
     # Optional Verification Documents
-    rera_project_certificate = models.FileField(upload_to='properties/docs/', null=True, blank=True)
-    gst_registration = models.FileField(upload_to='properties/docs/', null=True, blank=True)
-    sale_deed_registration_copy = models.FileField(upload_to='properties/docs/', null=True, blank=True)
+    rera_project_certificate = models.FileField(upload_to='properties/docs/', null=True, blank=True, max_length=255)
+    gst_registration = models.FileField(upload_to='properties/docs/', null=True, blank=True, max_length=255)
+    sale_deed_registration_copy = models.FileField(upload_to='properties/docs/', null=True, blank=True, max_length=255)
 
     # --- 8. Contact Info ---
     listed_by = models.CharField(max_length=20, choices=[
@@ -158,8 +163,16 @@ class PropertyImage(models.Model):
 
 class PropertyFloorPlan(models.Model):
     property = models.ForeignKey(Property, related_name='floor_plans', on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='properties/floor_plans/')
+    image = models.ImageField(upload_to='properties/floor_plans/', max_length=255)
+    floor_number = models.IntegerField(blank=True, null=True, help_text="Floor number (e.g., 0 for ground)")
+    floor_name = models.CharField(max_length=100, blank=True, help_text="Floor name/description")
+    order = models.IntegerField(default=0, help_text="Display order")
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', 'floor_number']
+        verbose_name = 'Floor Plan'
+        verbose_name_plural = 'Floor Plans'
 
 # --- User Interactions ---
 class SavedProperty(models.Model):

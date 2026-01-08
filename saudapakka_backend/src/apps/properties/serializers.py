@@ -10,7 +10,7 @@ class PropertyImageSerializer(serializers.ModelSerializer):
 class PropertyFloorPlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = PropertyFloorPlan
-        fields = ['id', 'image', 'created_at']
+        fields = ['id', 'image', 'floor_number', 'floor_name', 'order', 'created_at']
 
 class PropertySerializer(serializers.ModelSerializer):
     # --- Nested Representations ---
@@ -143,6 +143,19 @@ class PropertySerializer(serializers.ModelSerializer):
 
         return data
 
+    def validate_bhk_config(self, value):
+        property_type = self.initial_data.get('property_type')
+        
+        # For plots, land, commercial - BHK can be 0 or null
+        if property_type in ['PLOT', 'LAND', 'COMMERCIAL', 'COMMERCIAL_UNIT']:
+            return value if value is not None else 0
+        
+        # For residential - BHK must be >= 1 ONLY if required.
+        # However, per user request, we want to allow 0 if the user explicitly chooses it,
+        # but logically residential properties should have bedrooms.
+        # We'll allow 0 if that's what the model permits, but normally frontend should enforce.
+        return value
+
     def validate_latitude(self, value):
         if value < -90 or value > 90:
             raise serializers.ValidationError("Invalid Latitude range.")
@@ -158,3 +171,9 @@ class PropertySerializer(serializers.ModelSerializer):
 
     def get_has_mojani(self, obj):
         return bool(obj.mojani_nakasha)
+
+class AdminPropertySerializer(PropertySerializer):
+    """
+    Serializer for Admin access, including full owner details (contact info).
+    """
+    owner_details = UserSerializer(source='owner', read_only=True)

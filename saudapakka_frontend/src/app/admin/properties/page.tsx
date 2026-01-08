@@ -43,8 +43,10 @@ export default function AdminPropertiesPage() {
     const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
 
     useEffect(() => {
-        fetchProperties();
-    }, [filter]);
+        if (user?.is_staff) {
+            fetchProperties();
+        }
+    }, [filter, user]);
 
     const fetchProperties = async () => {
         try {
@@ -102,7 +104,7 @@ export default function AdminPropertiesPage() {
                     <p className="text-gray-500 mt-1">Manage listings, verify ownership, and moderate content.</p>
                 </div>
                 <Link
-                    href="/dashboard/admin/properties/create"
+                    href="/admin/properties/create"
                     className="flex items-center gap-2 bg-gray-900 hover:bg-black text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-lg shadow-gray-200"
                 >
                     <PlusIcon className="w-5 h-5" />
@@ -122,8 +124,8 @@ export default function AdminPropertiesPage() {
                         key={tab.id}
                         onClick={() => setFilter(tab.id)}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === tab.id
-                                ? 'bg-gray-900 text-white shadow-md'
-                                : 'text-gray-600 hover:bg-gray-50'
+                            ? 'bg-gray-900 text-white shadow-md'
+                            : 'text-gray-600 hover:bg-gray-50'
                             }`}
                     >
                         {tab.label}
@@ -191,8 +193,8 @@ export default function AdminPropertiesPage() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${p.verification_status === 'VERIFIED' ? 'bg-green-50 text-green-700 border-green-200' :
-                                                    p.verification_status === 'REJECTED' ? 'bg-red-50 text-red-700 border-red-200' :
-                                                        'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                                p.verification_status === 'REJECTED' ? 'bg-red-50 text-red-700 border-red-200' :
+                                                    'bg-yellow-50 text-yellow-700 border-yellow-200'
                                                 }`}>
                                                 {p.verification_status === 'VERIFIED' && <CheckBadgeIcon className="w-3.5 h-3.5 mr-1" />}
                                                 {p.verification_status === 'REJECTED' && <XCircleIcon className="w-3.5 h-3.5 mr-1" />}
@@ -208,7 +210,7 @@ export default function AdminPropertiesPage() {
                                                 >
                                                     Verify
                                                 </button>
-                                                <Link href={`/dashboard/admin/properties/${p.id}/edit`} className="text-gray-400 hover:text-blue-600">
+                                                <Link href={`/admin/properties/${p.id}/edit`} className="text-gray-400 hover:text-blue-600">
                                                     <PencilSquareIcon className="w-5 h-5" />
                                                 </Link>
                                                 <button onClick={() => handleDelete(p.id)} className="text-gray-400 hover:text-red-600">

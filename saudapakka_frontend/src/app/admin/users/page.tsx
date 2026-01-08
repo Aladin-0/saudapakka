@@ -9,8 +9,12 @@ import {
     FunnelIcon,
     CheckBadgeIcon,
     ShieldCheckIcon,
-    UserIcon
+    UserIcon,
+    TrashIcon,
+    PencilSquareIcon,
+    ClockIcon
 } from "@heroicons/react/24/outline";
+import UserManagementModal from "@/components/admin/UserManagementModal";
 
 type User = {
     id: string;
@@ -34,9 +38,15 @@ export default function AdminUsersPage() {
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
 
+    // Management Modal
+    const [selectedUserForManagement, setSelectedUserForManagement] = useState<User | null>(null);
+    const [isManageModalOpen, setIsManageModalOpen] = useState(false);
+
     useEffect(() => {
-        fetchUsers();
-    }, [filter]);
+        if (user?.is_staff) {
+            fetchUsers();
+        }
+    }, [filter, user]);
 
     const fetchUsers = async () => {
         try {
@@ -57,6 +67,26 @@ export default function AdminUsersPage() {
 
     const handleVerificationComplete = () => {
         fetchUsers(); // Refresh list to show new status
+    };
+
+    const handleManageClick = (user: User) => {
+        setSelectedUserForManagement(user);
+        setIsManageModalOpen(true);
+    };
+
+    const handleDeleteClick = async (userId: string, userName: string) => {
+        if (!confirm(`Are you sure you want to PERMANENTLY delete ${userName}? This action cannot be undone.`)) return;
+
+        try {
+            setLoading(true); // Optimistic or block interaction
+            await api.delete(`/api/admin/users/${userId}/`);
+            setUsers(users.filter(u => u.id !== userId));
+        } catch (error) {
+            console.error("Failed to delete user", error);
+            alert("Failed to delete user. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const filteredUsers = users.filter(u =>
@@ -94,6 +124,12 @@ export default function AdminUsersPage() {
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === 'SELLER' ? 'bg-gray-900 text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
                     >
                         Sellers
+                    </button>
+                    <button
+                        onClick={() => setFilter("LOGGED_IN")}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === 'LOGGED_IN' ? 'bg-gray-900 text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
+                    >
+                        Recently Active
                     </button>
                 </div>
             </div>
@@ -166,23 +202,39 @@ export default function AdminUsersPage() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${u.kyc_status === 'VERIFIED' ? 'bg-green-50 text-green-700 border-green-200' :
-                                                    u.kyc_status === 'REJECTED' ? 'bg-red-50 text-red-700 border-red-200' :
-                                                        'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                                u.kyc_status === 'REJECTED' ? 'bg-red-50 text-red-700 border-red-200' :
+                                                    'bg-yellow-50 text-yellow-700 border-yellow-200'
                                                 }`}>
                                                 <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${u.kyc_status === 'VERIFIED' ? 'bg-green-500' :
-                                                        u.kyc_status === 'REJECTED' ? 'bg-red-500' :
-                                                            'bg-yellow-500'
+                                                    u.kyc_status === 'REJECTED' ? 'bg-red-500' :
+                                                        'bg-yellow-500'
                                                     }`}></span>
                                                 {u.kyc_status || 'NOT STARTED'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                            <button
-                                                onClick={() => handleVerifyClick(u.id)}
-                                                className="text-indigo-600 hover:text-indigo-900 font-medium hover:underline decoration-2 underline-offset-2"
-                                            >
-                                                Verify Docs
-                                            </button>
+                                            <div className="flex items-center justify-end gap-3">
+                                                <button
+                                                    onClick={() => handleVerifyClick(u.id)}
+                                                    className="text-indigo-600 hover:text-indigo-900 font-medium hover:underline text-xs"
+                                                >
+                                                    Verify Docs
+                                                </button>
+                                                <button
+                                                    onClick={() => handleManageClick(u)}
+                                                    className="p-1 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all"
+                                                    title="Manage Roles & Status"
+                                                >
+                                                    <PencilSquareIcon className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteClick(u.id, u.full_name)}
+                                                    className="p-1 text-red-400 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all"
+                                                    title="Delete User"
+                                                >
+                                                    <TrashIcon className="w-5 h-5" />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
@@ -193,12 +245,21 @@ export default function AdminUsersPage() {
             </div>
 
             {/* Verification Modal */}
-            {selectedUserId && (
+            {isVerifyModalOpen && selectedUserId && (
                 <UserVerificationModal
                     userId={selectedUserId}
                     isOpen={isVerifyModalOpen}
                     onClose={() => setIsVerifyModalOpen(false)}
                     onStatusChange={handleVerificationComplete}
+                />
+            )}
+
+            {isManageModalOpen && selectedUserForManagement && (
+                <UserManagementModal
+                    user={selectedUserForManagement}
+                    isOpen={isManageModalOpen}
+                    onClose={() => setIsManageModalOpen(false)}
+                    onUpdate={fetchUsers}
                 />
             )}
         </div>

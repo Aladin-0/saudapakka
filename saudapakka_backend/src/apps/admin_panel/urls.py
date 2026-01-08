@@ -5,8 +5,8 @@ from .views import (
     AdminPropertyList, 
     AdminPropertyAction,
     AdminUserList,
-    AdminUserAction ,
-    
+    AdminUserAction,
+    AdminUserDetail,
 )
 
 urlpatterns = [
@@ -19,6 +19,7 @@ urlpatterns = [
 
     # User Management
     path('users/', AdminUserList.as_view(), name='admin-user-list'),
+    path('users/<uuid:pk>/', AdminUserDetail.as_view(), name='admin-user-detail'),
     path('users/<uuid:pk>/action/', AdminUserAction.as_view(), name='admin-user-action'),
 
     # View Single Property (Details + Docs)

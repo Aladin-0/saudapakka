@@ -7,7 +7,8 @@ import {
     HomeModernIcon,
     ChartPieIcon,
     DocumentCheckIcon,
-    ArrowLeftOnRectangleIcon
+    ArrowLeftOnRectangleIcon,
+    HomeIcon
 } from "@heroicons/react/24/outline";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
@@ -23,10 +24,10 @@ export default function AdminSidebar() {
     };
 
     const navigation = [
-        { name: "Overview", href: "/dashboard/admin", icon: ChartPieIcon },
-        { name: "User Management", href: "/dashboard/admin/users", icon: UsersIcon },
-        { name: "Properties", href: "/dashboard/admin/properties", icon: HomeModernIcon },
-        // Add more admin links here
+        { name: "Overview", href: "/admin", icon: ChartPieIcon },
+        { name: "User Management", href: "/admin/users", icon: UsersIcon },
+        { name: "Properties", href: "/admin/properties", icon: HomeModernIcon },
+        { name: "Home Website", href: "/", icon: HomeIcon },
     ];
 
     return (

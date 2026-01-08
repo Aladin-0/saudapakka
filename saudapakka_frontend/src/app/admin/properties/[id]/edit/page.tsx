@@ -24,7 +24,7 @@ export default function AdminPropertyEditPage() {
         } catch (error) {
             console.error("Failed to load property", error);
             alert("Could not load property data.");
-            router.push("/dashboard/admin/properties");
+            router.push("/admin/properties");
         }
     };
 
@@ -58,7 +58,7 @@ export default function AdminPropertyEditPage() {
             }
 
             alert("Property Updated!");
-            router.push("/dashboard/admin/properties");
+            router.push("/admin/properties");
 
         } catch (error) {
             console.error("Update failed", error);

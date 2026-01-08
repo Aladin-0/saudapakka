@@ -12,6 +12,7 @@ interface User {
   is_active_seller: boolean;
   is_active_broker: boolean;
   is_staff: boolean;
+  kyc_verified?: boolean;
 }
 
 interface AuthState {

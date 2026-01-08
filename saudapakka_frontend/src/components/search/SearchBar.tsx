@@ -10,7 +10,7 @@ export default function SearchBar() {
     // --- STATE ---
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const [listingType, setListingType] = useState("BUY");
+    const [listingType, setListingType] = useState("SALE"); // Synced with backend 'SALE'
 
     // Advanced Filters
     const [propertyType, setPropertyType] = useState("ALL");
@@ -22,12 +22,16 @@ export default function SearchBar() {
         const params = new URLSearchParams();
 
         if (searchQuery.trim()) params.append("q", searchQuery);
-        if (listingType) params.append("type", listingType); // Mapped to 'type' in backend/search page
+        if (listingType) params.append("type", listingType);
 
-        // Advanced params (only if not default)
+        // Advanced params
         if (propertyType !== "ALL") params.append("property", propertyType);
         if (budget !== "ANY") params.append("budget", budget);
-        if (bedrooms !== "ANY") params.append("bhk", bedrooms);
+
+        // Only append BHK if relevant (Residential mainly)
+        if (bedrooms !== "ANY" && !['PLOT', 'LAND', 'COMMERCIAL_UNIT'].includes(propertyType)) {
+            params.append("bhk", bedrooms);
+        }
 
         router.push(`/search?${params.toString()}`);
     };
@@ -36,9 +40,27 @@ export default function SearchBar() {
         setPropertyType("ALL");
         setBudget("ANY");
         setBedrooms("ANY");
-        setListingType("BUY");
+        setListingType("SALE");
         setSearchQuery("");
     };
+
+    // Helper to handle Quick Filters
+    const handleQuickFilter = (type: string) => {
+        if (type === 'COMMERCIAL') {
+            setPropertyType('COMMERCIAL_UNIT');
+            setListingType('SALE'); // Assume sale primarily
+        } else if (type === 'PLOTS') {
+            setPropertyType('PLOT');
+            setListingType('SALE');
+        } else {
+            setListingType(type); // BUY (SALE) or RENT
+            // Reset specific property type if switching back to generic buy/rent to allow user choice? 
+            // Or keep it. Let's keep it but if it was Commercial maybe reset?
+            // Actually simpler: Just set listing type.
+        }
+    };
+
+    const showBHK = !['PLOT', 'LAND', 'COMMERCIAL_UNIT'].includes(propertyType);
 
     return (
         <div className="w-full max-w-4xl mx-auto px-4 sm:px-0 relative z-20">
@@ -51,7 +73,7 @@ export default function SearchBar() {
                         <Search className="w-5 h-5 text-[#4A9B6D] shrink-0" />
                         <input
                             type="text"
-                            placeholder="Search city, locality..."
+                            placeholder="Search city, locality, project..."
                             className="w-full bg-transparent border-none outline-none text-gray-800 placeholder-gray-500 text-base py-3 px-3 min-w-0"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -94,28 +116,45 @@ export default function SearchBar() {
             >
                 <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/20">
 
-                    {/* Quick Filter Tabs (Buy/Rent) */}
+                    {/* Quick Filter Tabs */}
                     <div className="mb-6 overflow-x-auto pb-2 scrollbar-hide">
                         <div className="flex gap-2 min-w-max">
-                            {['BUY', 'RENT'].map((type) => (
-                                <button
-                                    key={type}
-                                    onClick={() => setListingType(type)}
-                                    className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap
-                     ${listingType === type
-                                            ? 'bg-[#4A9B6D] text-white shadow-md'
-                                            : 'bg-white border border-gray-200 text-gray-600 hover:border-[#4A9B6D]'}`}
-                                >
-                                    {type === 'BUY' ? 'Buy Property' : 'Rent Property'}
-                                </button>
-                            ))}
-
-                            {/* Placeholders for visual completeness */}
-                            {['Projects', 'Commercial'].map((item) => (
-                                <button key={item} className="px-5 py-2 bg-white border border-gray-200 text-gray-600 rounded-full text-sm font-medium opacity-60 hover:opacity-100 whitespace-nowrap">
-                                    {item}
-                                </button>
-                            ))}
+                            <button
+                                onClick={() => handleQuickFilter('SALE')}
+                                className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap
+                                ${listingType === 'SALE' && propertyType === 'ALL'
+                                        ? 'bg-[#4A9B6D] text-white shadow-md'
+                                        : 'bg-white border border-gray-200 text-gray-600 hover:border-[#4A9B6D]'}`}
+                            >
+                                Buy
+                            </button>
+                            <button
+                                onClick={() => handleQuickFilter('RENT')}
+                                className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap
+                                ${listingType === 'RENT'
+                                        ? 'bg-[#4A9B6D] text-white shadow-md'
+                                        : 'bg-white border border-gray-200 text-gray-600 hover:border-[#4A9B6D]'}`}
+                            >
+                                Rent
+                            </button>
+                            <button
+                                onClick={() => handleQuickFilter('PLOTS')}
+                                className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap
+                                ${propertyType === 'PLOT'
+                                        ? 'bg-[#4A9B6D] text-white shadow-md'
+                                        : 'bg-white border border-gray-200 text-gray-600 hover:border-[#4A9B6D]'}`}
+                            >
+                                Plots / Land
+                            </button>
+                            <button
+                                onClick={() => handleQuickFilter('COMMERCIAL')}
+                                className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap
+                                ${propertyType === 'COMMERCIAL_UNIT'
+                                        ? 'bg-[#4A9B6D] text-white shadow-md'
+                                        : 'bg-white border border-gray-200 text-gray-600 hover:border-[#4A9B6D]'}`}
+                            >
+                                Commercial
+                            </button>
                         </div>
                     </div>
 
@@ -131,9 +170,10 @@ export default function SearchBar() {
                             >
                                 <option value="ALL">All Residential</option>
                                 <option value="FLAT">Apartment / Flat</option>
-                                <option value="VILLA">Villa / Bungalow</option>
-                                <option value="INDEPENDENT_HOUSE">Indep. House</option>
-                                <option value="PENTHOUSE">Penthouse</option>
+                                <option value="VILLA_BUNGALOW">Villa / Bungalow</option>
+                                <option value="PLOT">Plot (Residential)</option>
+                                <option value="LAND">Land (Agri/Ind)</option>
+                                <option value="COMMERCIAL_UNIT">Commercial (Shop/Office)</option>
                             </select>
                         </div>
 
@@ -146,29 +186,37 @@ export default function SearchBar() {
                                 className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#4A9B6D]/20 focus:border-[#4A9B6D] outline-none text-sm text-gray-700 font-medium appearance-none"
                             >
                                 <option value="ANY">Any Budget</option>
-                                <option value="50L">Under ₹50L</option>
-                                <option value="50L-1CR">₹50L - ₹1Cr</option>
-                                <option value="1CR-2CR">₹1Cr - ₹2Cr</option>
-                                <option value="2CR+">Above ₹2Cr</option>
+                                <option value="50L">Under ₹50 Lac</option>
+                                <option value="50L-1CR">₹50 Lac - ₹1 Cr</option>
+                                <option value="1CR-2CR">₹1 Cr - ₹2 Cr</option>
+                                <option value="2CR-5CR">₹2 Cr - ₹5 Cr</option>
+                                <option value="5CR+">Above ₹5 Cr</option>
                             </select>
                         </div>
 
                         {/* BHK */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Bedrooms</label>
-                            <div className="flex bg-gray-50 p-1 rounded-xl border border-gray-200">
-                                {['ANY', '1', '2', '3', '4+'].map((opt) => (
-                                    <button
-                                        key={opt}
-                                        onClick={() => setBedrooms(opt)}
-                                        className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all
+                        {showBHK ? (
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Bedrooms</label>
+                                <div className="flex bg-gray-50 p-1 rounded-xl border border-gray-200">
+                                    {['ANY', '1', '2', '3', '4+'].map((opt) => (
+                                        <button
+                                            key={opt}
+                                            onClick={() => setBedrooms(opt)}
+                                            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all
                       ${bedrooms === opt ? 'bg-white text-[#4A9B6D] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                                    >
-                                        {opt === 'ANY' ? 'All' : opt}
-                                    </button>
-                                ))}
+                                        >
+                                            {opt === 'ANY' ? 'All' : opt}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="space-y-2 opacity-50 pointer-events-none grayscale">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Bedrooms</label>
+                                <div className="p-3 text-sm text-gray-400 italic">Not applicable</div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Footer Actions */}

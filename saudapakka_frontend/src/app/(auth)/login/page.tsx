@@ -47,7 +47,9 @@ export default function LoginPage() {
 
       setAuth(user, accessToken);
 
-      if (!user.full_name || user.full_name.trim() === "") {
+      if (user.is_staff) {
+        router.push("/admin");
+      } else if (!user.full_name || user.full_name.trim() === "") {
         router.push("/complete-profile");
       } else {
         router.push("/dashboard/overview");

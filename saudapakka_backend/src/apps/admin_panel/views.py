@@ -15,11 +15,6 @@ from apps.users.models import BrokerProfile, KYCVerification
 
 User = get_user_model()
 
-# --- Custom Permission: Super Admin Only ---
-class IsSuperAdmin(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.is_superuser
-
 # ==========================================
 # 1. ANALYTICS & STATS (For Dashboard Graphs)
 # ==========================================
@@ -85,11 +80,13 @@ class AdminPropertyList(generics.ListAPIView):
     List properties based on status.
     Usage: /api/admin/properties/?status=PENDING
     """
-    permission_classes = [IsSuperAdmin]
+    permission_classes = [permissions.IsAdminUser]
     # We need to import the serializer. We will do this in the serializers step.
     # For now, we assume PropertySerializer exists.
-    from apps.properties.serializers import PropertySerializer 
-    serializer_class = PropertySerializer
+    # We need to import the serializer. We will do this in the serializers step.
+    # For now, we assume PropertySerializer exists.
+    from apps.properties.serializers import AdminPropertySerializer 
+    serializer_class = AdminPropertySerializer
 
     def get_queryset(self):
         status_param = self.request.query_params.get('status', 'PENDING')
@@ -99,7 +96,7 @@ class AdminPropertyAction(APIView):
     """
     Approve or Reject a property.
     """
-    permission_classes = [IsSuperAdmin]
+    permission_classes = [permissions.IsAdminUser]
 
     def post(self, request, pk):
         try:
@@ -133,23 +130,31 @@ class AdminUserList(generics.ListAPIView):
     List all users with filters.
     Usage: /api/admin/users/?role=BROKER
     """
-    permission_classes = [IsSuperAdmin]
+    permission_classes = [permissions.IsAdminUser]
     from apps.users.serializers import UserSerializer
     serializer_class = UserSerializer
 
     def get_queryset(self):
         role = self.request.query_params.get('role', 'ALL')
+        
+        queryset = User.objects.all().order_by('-date_joined')
+
         if role == 'BROKER':
-            return User.objects.filter(is_active_broker=True)
+            queryset = queryset.filter(is_active_broker=True)
         elif role == 'SELLER':
-            return User.objects.filter(is_active_seller=True)
-        return User.objects.all()
+            queryset = queryset.filter(is_active_seller=True)
+        elif role == 'LOGGED_IN':
+            # Active users in last 7 days
+            seven_days_ago = timezone.now() - timedelta(days=7)
+            queryset = queryset.filter(last_login__gte=seven_days_ago)
+            
+        return queryset
 
 class AdminUserAction(APIView):
     """
-    Ban or Activate a user.
+    Manage user state: BLOCK, UNBLOCK, UPDATE_ROLE
     """
-    permission_classes = [IsSuperAdmin]
+    permission_classes = [permissions.IsAdminUser]
 
     def post(self, request, pk):
         try:
@@ -157,24 +162,53 @@ class AdminUserAction(APIView):
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=404)
         
-        action = request.data.get('action') # 'BLOCK' or 'UNBLOCK'
+        action = request.data.get('action') # 'BLOCK', 'UNBLOCK', 'UPDATE_ROLE'
         
         if action == 'BLOCK':
             user.is_active = False
             user.save()
             return Response({"message": "User blocked successfully"})
+            
         elif action == 'UNBLOCK':
             user.is_active = True
             user.save()
             return Response({"message": "User unblocked"})
             
+        elif action == 'UPDATE_ROLE':
+            is_broker = request.data.get('is_active_broker')
+            is_seller = request.data.get('is_active_seller')
+            
+            if is_broker is not None:
+                user.is_active_broker = bool(is_broker)
+            if is_seller is not None:
+                user.is_active_seller = bool(is_seller)
+                
+            user.save()
+            return Response({"message": "User roles updated successfully"})
+            
         return Response({"error": "Invalid action"}, status=400)
+
+class AdminUserDetail(generics.RetrieveDestroyAPIView):
+    """
+    Get or Delete a user.
+    """
+    permission_classes = [permissions.IsAdminUser]
+    from apps.users.serializers import UserSerializer
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
+
+    def perform_destroy(self, instance):
+        # Optional: Soft delete instead?
+        # instance.is_active = False
+        # instance.save()
+        instance.delete()
+
     
 class AdminPropertyDetail(generics.RetrieveAPIView):
     """
     Get FULL details of a single property (including Document URLs) for Admin Review.
     """
-    permission_classes = [IsSuperAdmin]
-    from apps.properties.serializers import PropertySerializer
-    serializer_class = PropertySerializer
+    permission_classes = [permissions.IsAdminUser]
+    from apps.properties.serializers import AdminPropertySerializer
+    serializer_class = AdminPropertySerializer
     queryset = Property.objects.all()

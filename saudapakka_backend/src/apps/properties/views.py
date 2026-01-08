@@ -75,7 +75,18 @@ class PropertyViewSet(viewsets.ModelViewSet):
             )
         
         # Save with owner and initial pending status
-        serializer.save(owner=user, verification_status='PENDING')
+        property_instance = serializer.save(owner=user, verification_status='PENDING')
+
+        # Handle Floor Plan Uploads (Multipart)
+        floor_plans = self.request.FILES.getlist('floor_plans')
+        if floor_plans:
+            from .models import PropertyFloorPlan
+            for i, fp_file in enumerate(floor_plans):
+                PropertyFloorPlan.objects.create(
+                    property=property_instance,
+                    image=fp_file,
+                    order=i
+                )
 
     # --- IMAGE MANAGEMENT ---
 

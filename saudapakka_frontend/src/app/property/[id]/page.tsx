@@ -20,6 +20,8 @@ import {
   MessageCircle, Loader2
 } from "lucide-react";
 
+import { PropertyDetail } from "@/types/property";
+
 // Import Map dynamically
 const MapViewer = dynamic(() => import("@/components/map-viewer"), {
   ssr: false,
@@ -33,42 +35,77 @@ const MapViewer = dynamic(() => import("@/components/map-viewer"), {
 
 // Amenity icons mapping
 const amenityIcons: { [key: string]: any } = {
-  'Parking': Car,
-  'Security': Shield,
-  'Power Backup': Zap,
-  'Wi-Fi': Wifi,
-  'Swimming Pool': Droplet,
-  'Gym': Users,
-  'Garden': Trees,
-  'Air Conditioning': Wind,
-  'Elevator': Package,
-  'Modular Kitchen': Home,
+  'parking': Car,
+  'security': Shield,
+  'power backup': Zap,
+  'wifi': Wifi,
+  'swimming pool': Droplet,
+  'gym': Users,
+  'park': Trees,
+  'garden': Trees,
+  'air conditioning': Wind,
+  'lift': Package,
+  'elevator': Package,
+  'club house': Home,
+  'intercom': MessageCircle, // meaningful icon
+  'piped gas': Droplet, // meaningful icon
+  'vastu compliant': Sparkles,
+};
+
+const formatAmenityName = (key: string): string => {
+  return key
+    .replace(/^(has_|is_)/, '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, char => char.toUpperCase());
+};
+
+const formatDocumentName = (key: string): string => {
+  const names: Record<string, string> = {
+    doc_7_12_or_pr_card: '7/12 Extract / PR Card',
+    mojani_nakasha: 'Mojani / Nakasha',
+    building_commencement_certificate: 'Commencement Certificate',
+    building_completion_certificate: 'Completion Certificate',
+    layout_sanction: 'Layout Sanction',
+    layout_order: 'Layout Order',
+    na_order_or_gunthewari: 'NA Order / Gunthewari',
+    title_search_report: 'Title Search Report',
+    rera_project_certificate: 'RERA Certificate',
+    gst_registration: 'GST Registration',
+    sale_deed_registration_copy: 'Sale Deed Copy',
+  };
+  return names[key] || key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+};
+
+const getImageUrl = (path: string | undefined): string => {
+  if (!path) return "https://placehold.co/1200x800?text=No+Image";
+  if (path.startsWith('http')) return path;
+  return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${path}`;
 };
 
 // Amenities helper
-const getAmenitiesList = (property: any) => {
+const getAmenitiesList = (property: PropertyDetail | null) => {
   if (!property) return [];
-  const start = [];
-  if (property.has_power_backup) start.push('Power Backup');
-  if (property.has_lift) start.push('Elevator');
-  if (property.has_swimming_pool) start.push('Swimming Pool');
-  if (property.has_club_house) start.push('Club House');
-  if (property.has_gym) start.push('Gym');
-  if (property.has_park) start.push('Garden');
-  if (property.has_reserved_parking) start.push('Parking');
-  if (property.has_security) start.push('Security');
-  if (property.is_vastu_compliant) start.push('Vastu Compliant');
-  if (property.has_intercom) start.push('Intercom');
-  if (property.has_piped_gas) start.push('Piped Gas');
-  if (property.has_wifi) start.push('Wi-Fi');
-  return start;
+  const list: string[] = [];
+  if (property.has_power_backup) list.push('Power Backup');
+  if (property.has_lift) list.push('Elevator');
+  if (property.has_swimming_pool) list.push('Swimming Pool');
+  if (property.has_club_house) list.push('Club House');
+  if (property.has_gym) list.push('Gym');
+  if (property.has_park) list.push('Garden');
+  if (property.has_reserved_parking) list.push('Parking');
+  if (property.has_security) list.push('Security');
+  if (property.is_vastu_compliant) list.push('Vastu Compliant');
+  if (property.has_intercom) list.push('Intercom');
+  if (property.has_piped_gas) list.push('Piped Gas');
+  if (property.has_wifi) list.push('Wi-Fi');
+  return list;
 };
 
 export default function PropertyDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
   const { user } = useAuth();
-  const [property, setProperty] = useState<any>(null);
+  const [property, setProperty] = useState<PropertyDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState("");
   const [isSaved, setIsSaved] = useState(false);
@@ -91,9 +128,12 @@ export default function PropertyDetailsPage() {
   useEffect(() => {
     if (id) {
       fetchPropertyDetails();
-      recordView();
+      // Only record view if user is logged in to avoid 401 redirect
+      if (user) {
+        recordView();
+      }
     }
-  }, [id]);
+  }, [id, user]);
 
   const fetchPropertyDetails = async () => {
     try {
@@ -133,15 +173,28 @@ export default function PropertyDetailsPage() {
   };
 
   const nextImage = () => {
-    if (property.images && activeImageIndex < property.images.length - 1) {
+    if (property && property.images && activeImageIndex < property.images.length - 1) {
       changeImage(property.images[activeImageIndex + 1].image, activeImageIndex + 1);
     }
   };
 
   const prevImage = () => {
-    if (activeImageIndex > 0) {
+    if (property && property.images && activeImageIndex > 0) {
       changeImage(property.images[activeImageIndex - 1].image, activeImageIndex - 1);
     }
+  };
+
+  const handleWhatsAppClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!user) {
+      const currentUrl = encodeURIComponent(window.location.pathname);
+      router.push(`/login?redirect=${currentUrl}`);
+      return;
+    }
+
+    // For now, let's trigger the modal if contact details aren't ready, 
+    // or if we want to force the "Contact Owner" flow to reveal details.
+    handleContactOwner();
   };
 
   const formatPrice = (price: number) => {
@@ -177,6 +230,7 @@ export default function PropertyDetailsPage() {
   };
 
   const handleShare = () => {
+    if (!property) return;
     if (navigator.share) {
       navigator.share({
         title: property.title,
@@ -311,7 +365,7 @@ export default function PropertyDetailsPage() {
                       </button>
                       <button
                         onClick={nextImage}
-                        disabled={activeImageIndex === property.images.length - 1}
+                        disabled={property.images && activeImageIndex === property.images.length - 1}
                         className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/50 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/70 transition-all disabled:opacity-30 disabled:cursor-not-allowed z-20"
                       >
                         <ChevronRight className="w-5 h-5" />
@@ -447,7 +501,8 @@ export default function PropertyDetailsPage() {
                   <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
                     <div className="flex items-center gap-1">
                       <Eye className="w-4 h-4" />
-                      {property.views || 0} views
+                      {/* Views count not available in current API */}
+                      Many views
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
@@ -480,7 +535,7 @@ export default function PropertyDetailsPage() {
                   <div className="text-center p-4 bg-gradient-to-br from-[#E8F5E9] to-[#E8F5E9]/50 rounded-xl hover:shadow-md transition-all">
                     <Building className="w-8 h-8 mx-auto text-[#4A9B6D] mb-2" />
                     <div className="text-xl font-bold text-gray-900">{property.property_type}</div>
-                    <div className="text-sm text-gray-600">Type</div>
+                    <div className="text-sm text-gray-600">{property.sub_type_display || "Standard"}</div>
                   </div>
                 </div>
 
@@ -521,7 +576,7 @@ export default function PropertyDetailsPage() {
                   <div className="text-center p-3 bg-gradient-to-br from-[#E8F5E9] to-[#E8F5E9]/50 rounded-xl">
                     <Building className="w-6 h-6 text-[#4A9B6D] mx-auto mb-1.5" />
                     <div className="text-[10px] font-bold text-gray-900 leading-tight">{property.property_type}</div>
-                    <div className="text-[10px] text-gray-600 leading-tight">Type</div>
+                    <div className="text-[10px] text-gray-600 leading-tight">{property.sub_type_display || "Type"}</div>
                   </div>
                 </div>
               </div>
@@ -561,42 +616,38 @@ export default function PropertyDetailsPage() {
                       <Calendar className="w-4 h-4" />
                       Schedule
                     </Button>
-                    <a
-                      href={property.whatsapp_number
-                        ? `https://wa.me/${property.whatsapp_number.replace(/\D/g, '')}?text=Hi, I'm interested in ${property.title}`
-                        : `https://wa.me/${property.owner_phone_number?.replace(/\D/g, '') || ''}?text=Hi, I'm interested in ${property.title}`
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1"
+                    <Button
+                      variant="outline"
+                      onClick={handleWhatsAppClick}
+                      className="w-full border-2 border-[#2D5F3F] text-[#2D5F3F] py-3 rounded-xl font-semibold hover:bg-[#E8F5E9]/50 transition-all flex items-center justify-center gap-2 text-sm"
                     >
-                      <Button variant="outline" className="w-full border-2 border-[#2D5F3F] text-[#2D5F3F] py-3 rounded-xl font-semibold hover:bg-[#E8F5E9]/50 transition-all flex items-center justify-center gap-2 text-sm">
-                        <MessageCircle className="w-4 h-4" />
-                        Message
-                      </Button>
-                    </a>
+                      <MessageCircle className="w-4 h-4" />
+                      Message
+                    </Button>
                   </div>
                 </div>
               </div>
 
               {/* Floor Plans */}
-              {(property.floor_plans?.length > 0 || property.floor_plan) && (
+              {((property.floor_plans?.length ?? 0) > 0 || property.floor_plan) && (
                 <div className="bg-white sm:rounded-2xl p-4 sm:p-6 md:p-8 sm:shadow-lg mb-4 sm:mb-6">
                   <h2 className="text-base sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 sm:mb-6">
-                    {property.floor_plans?.length > 1 ? 'Floor Plans' : 'Floor Plan'}
+                    {(property.floor_plans?.length ?? 0) > 1 ? 'Floor Plans' : 'Floor Plan'}
                   </h2>
 
-                  {property.floor_plans?.length > 0 ? (
+                  {(property.floor_plans?.length ?? 0) > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {property.floor_plans.map((fp: any) => (
+                      {property.floor_plans?.map((fp: any) => (
                         <div key={fp.id} className="rounded-xl overflow-hidden border border-gray-100 bg-gray-50 group">
                           <img
                             src={fp.image}
                             alt="Floor Plan"
                             className="w-full h-auto object-contain max-h-[400px] group-hover:scale-105 transition-transform duration-500 cursor-zoom-in"
                             onClick={() => {
-                              setActiveImage(fp.image);
-                              setShowImageModal(true);
+                              if (fp.image) {
+                                setActiveImage(fp.image);
+                                setShowImageModal(true);
+                              }
                             }}
                           />
                         </div>
@@ -610,8 +661,10 @@ export default function PropertyDetailsPage() {
                         alt="Floor Plan"
                         className="w-full h-auto object-contain max-h-[500px] hover:scale-105 transition-transform duration-500 cursor-zoom-in"
                         onClick={() => {
-                          setActiveImage(property.floor_plan);
-                          setShowImageModal(true);
+                          if (property.floor_plan) {
+                            setActiveImage(property.floor_plan);
+                            setShowImageModal(true);
+                          }
                         }}
                       />
                     </div>
@@ -773,7 +826,7 @@ export default function PropertyDetailsPage() {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Property Status</span>
                       <Badge className="bg-green-50 text-green-700 border-green-200 text-xs">
-                        {property.property_status || "Ready to Move"}
+                        {property.verification_status === 'VERIFIED' ? "Verified" : property.availability_status}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between text-sm">
@@ -804,44 +857,68 @@ export default function PropertyDetailsPage() {
                       <Calendar className="w-5 h-5" />
                       Schedule Visit
                     </Button>
-                    <a
-                      href={property.whatsapp_number
-                        ? `https://wa.me/${property.whatsapp_number.replace(/\D/g, '')}?text=Hi, I'm interested in ${property.title}`
-                        : `https://wa.me/${property.owner_phone_number?.replace(/\D/g, '') || ''}?text=Hi, I'm interested in ${property.title}`
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-full"
+                    <Button
+                      variant="outline"
+                      onClick={handleWhatsAppClick}
+                      className="w-full border-2 border-[#25D366] text-[#25D366] hover:bg-[#25D366]/10 py-2 mt-2 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
                     >
-                      <Button variant="outline" className="w-full border-2 border-[#25D366] text-[#25D366] hover:bg-[#25D366]/10 py-2 mt-2 rounded-xl font-semibold transition-all flex items-center justify-center gap-2">
-                        <MessageCircle className="w-5 h-5" />
-                        Chat on WhatsApp
-                      </Button>
-                    </a>
+                      <MessageCircle className="w-5 h-5" />
+                      Chat on WhatsApp
+                    </Button>
                     <Button variant="outline" className="w-full border-2 border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all flex items-center justify-center gap-2" onClick={toggleSave}>
                       <Heart className={`w-5 h-5 ${isSaved ? "fill-red-500 text-red-500" : ""}`} />
                       {isSaved ? "Saved" : "Save Property"}
                     </Button>
                   </div>
 
-                  {/* Legal Verification */}
-                  {(property.has_7_12 || property.has_mojani) && (
+                  {/* Legal Verification Documents */}
+                  {(property.verification_status === 'VERIFIED') && (
                     <div className="mt-6 pt-6 border-t border-gray-200">
                       <h3 className="font-semibold text-sm text-gray-900 mb-3 flex items-center gap-2">
                         <Shield className="w-4 h-4 text-[#4A9B6D]" />
-                        Legal Documents
+                        Legal Documents (Verified)
                       </h3>
-                      <div className="space-y-2">
-                        {property.has_7_12 && (
+                      <div className="grid grid-cols-1 gap-2">
+                        {[
+                          'doc_7_12_or_pr_card',
+                          'mojani_nakasha',
+                          'building_commencement_certificate',
+                          'building_completion_certificate',
+                          'layout_sanction',
+                          'layout_order',
+                          'na_order_or_gunthewari',
+                          'title_search_report'
+                        ].map((docKey) => {
+                          const url = property[docKey as keyof PropertyDetail];
+                          if (!url || typeof url !== 'string') return null;
+                          return (
+                            <div
+                              key={docKey}
+                              className="flex items-center justify-between p-2.5 bg-green-50 rounded-lg hover:bg-green-100 transition-colors group cursor-default"
+                            >
+                              <div className="flex items-center gap-2 text-sm text-green-700 font-medium">
+                                <Check className="w-4 h-4 text-[#4A9B6D]" />
+                                {formatDocumentName(docKey)}
+                              </div>
+                              {/* Removed ExternalLink for privacy */}
+                              <div className="flex items-center gap-1.5 bg-white/50 px-2 py-0.5 rounded text-[10px] sm:text-xs text-green-800 font-semibold border border-green-100">
+                                <CheckCircle className="w-3 h-3" />
+                                Verified
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {/* Fallback if no specific docs but flags are true (Likely manually verified) */}
+                        {!property.doc_7_12_or_pr_card && property.has_7_12 && (
                           <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 p-2.5 rounded-lg">
                             <Check className="w-4 h-4 flex-shrink-0" />
-                            7/12 Extract Available
+                            <span>7/12 Extract Verified</span>
                           </div>
                         )}
-                        {property.has_mojani && (
+                        {!property.mojani_nakasha && property.has_mojani && (
                           <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 p-2.5 rounded-lg">
                             <Check className="w-4 h-4 flex-shrink-0" />
-                            Mojani Map Available
+                            <span>Mojani Map Verified</span>
                           </div>
                         )}
                       </div>

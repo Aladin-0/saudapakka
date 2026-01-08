@@ -15,7 +15,7 @@ export default function DashboardRoot() {
     if (!user) return;
 
     if (user.is_staff) {
-      router.replace("/dashboard/admin");
+      router.replace("/admin");
     } else {
       router.replace("/dashboard/overview");
     }

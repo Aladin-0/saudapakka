@@ -17,9 +17,21 @@ export default function CompleteProfilePage() {
     phone_number: ""
   });
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, ""); // Remove non-digits
+    if (value.length <= 10) {
+      setFormData({ ...formData, phone_number: value });
+    }
+  };
+
   const handleUpdate = async () => {
     if (!formData.first_name || !formData.last_name || !formData.phone_number) {
       alert("Please fill in all fields.");
+      return;
+    }
+
+    if (formData.phone_number.length !== 10) {
+      alert("Please enter a valid 10-digit mobile number.");
       return;
     }
 
@@ -31,7 +43,6 @@ export default function CompleteProfilePage() {
       console.error(error);
       const data = error.response?.data;
       if (data) {
-        // Handle field-specific errors (e.g. phone_number: ["User with this..."])
         const fieldErrors = Object.keys(data).map(key => {
           const msgs = Array.isArray(data[key]) ? data[key].join(" ") : data[key];
           return `${key.replace('_', ' ').toUpperCase()}: ${msgs}`;
@@ -85,39 +96,61 @@ export default function CompleteProfilePage() {
           <div className="space-y-5">
 
             <div className="grid grid-cols-2 gap-4">
+              {/* First Name */}
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-gray-500 uppercase ml-1 tracking-wider">First Name</label>
                 <div className="relative group">
-                  <User className="absolute left-4 top-3.5 h-4 w-4 text-gray-400 group-focus-within:text-accent-green transition-colors" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-accent-green transition-colors pointer-events-none z-10" />
                   <Input
-
+                    type="text"
                     value={formData.first_name}
                     onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                    className="pl-10 pr-4 h-12 bg-white border-gray-200 focus:border-accent-green focus:ring-accent-green rounded-xl"
                   />
                 </div>
               </div>
+
+              {/* Last Name */}
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-gray-500 uppercase ml-1 tracking-wider">Last Name</label>
                 <div className="relative group">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-accent-green transition-colors pointer-events-none z-10" />
                   <Input
-
+                    type="text"
                     value={formData.last_name}
                     onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                    className="pl-10 pr-4 h-12 bg-white border-gray-200 focus:border-accent-green focus:ring-accent-green rounded-xl"
                   />
                 </div>
               </div>
             </div>
 
+            {/* Mobile Number */}
             <div className="space-y-2">
               <label className="text-[10px] font-bold text-gray-500 uppercase ml-1 tracking-wider">Mobile Number</label>
               <div className="relative group">
-                <Phone className="absolute left-4 top-3.5 h-4 w-4 text-gray-400 group-focus-within:text-accent-green transition-colors" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-accent-green transition-colors pointer-events-none z-10" />
                 <Input
-
+                  type="tel"
                   value={formData.phone_number}
-                  onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                  onChange={handlePhoneChange}
+                  maxLength={10}
+                  className="pl-10 pr-4 h-12 bg-white border-gray-200 focus:border-accent-green focus:ring-accent-green rounded-xl"
                 />
               </div>
+              {formData.phone_number.length > 0 && formData.phone_number.length < 10 && (
+                <p className="text-xs text-red-500 ml-1">
+                  {10 - formData.phone_number.length} more digit{10 - formData.phone_number.length > 1 ? 's' : ''} required
+                </p>
+              )}
+              {formData.phone_number.length === 10 && (
+                <p className="text-xs text-green-600 ml-1 flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Valid mobile number
+                </p>
+              )}
             </div>
 
             <Button
