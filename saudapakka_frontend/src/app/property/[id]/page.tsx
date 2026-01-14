@@ -23,7 +23,7 @@ import {
 import { PropertyDetail } from "@/types/property";
 
 // Import Map dynamically
-const MapViewer = dynamic(() => import("@/components/map-viewer"), {
+const MapViewer = dynamic(() => import("@/components/maps/MapViewer"), {
   ssr: false,
   loading: () => <div className="h-[300px] sm:h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse rounded-xl flex items-center justify-center">
     <div className="text-center">
@@ -296,6 +296,42 @@ export default function PropertyDetailsPage() {
       amenity.toLowerCase().includes(key.toLowerCase())
     )?.[1] || Sparkles;
     return Icon;
+  };
+
+  // Handler to open Google Maps directions
+  const handleGetDirections = () => {
+    if (!property) return;
+
+    // Prefer lat/lng if available
+    const hasCoords = typeof property.latitude === "number" && typeof property.longitude === "number";
+
+    const fallbackAddressParts = [
+      property.address_line,
+      property.locality,
+      property.city,
+      property.pincode,
+    ].filter(Boolean);
+
+    const fallbackAddress = fallbackAddressParts.join(", ");
+
+    if (!hasCoords && !fallbackAddress) {
+      showNotify("Directions are not available for this property.", "info");
+      return;
+    }
+
+    let destination: string;
+
+    if (hasCoords) {
+      destination = `${property.latitude},${property.longitude}`;
+    } else {
+      destination = fallbackAddress;
+    }
+
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}&travelmode=driving`;
+
+    if (typeof window !== "undefined") {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
   };
 
   if (loading) return (
@@ -879,11 +915,32 @@ export default function PropertyDetailsPage() {
 
                 {/* Map */}
                 <div className="mb-4 sm:mb-6 rounded-xl overflow-hidden">
-                  <MapViewer lat={property.latitude} lng={property.longitude} />
+                  <MapViewer
+                    lat={property.latitude}
+                    lng={property.longitude}
+                    address={`${property.address_line}, ${property.city}`}
+                  />
                   <p className="text-xs sm:text-sm text-gray-500 mt-2 flex items-center gap-1">
                     <MapPin className="w-3 h-3" />
                     Approximate location shown for privacy
                   </p>
+
+                  {/* Get Directions CTA */}
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      onClick={handleGetDirections}
+                      className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium bg-[#2D5F3F] text-white hover:bg-[#1B3A2C] shadow-sm hover:shadow-md transition-all"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Get Directions
+                    </Button>
+
+                    {/* Optional helper text */}
+                    <span className="text-xs sm:text-sm text-gray-500">
+                      Opens Google Maps for navigation
+                    </span>
+                  </div>
                 </div>
 
                 {/* Nearby Places

@@ -19,6 +19,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased text-gray-900 bg-white`} suppressHydrationWarning>
+        {/* Google Maps Script Injection - Strategy: beforeInteractive to load early */}
+        <script
+          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places,geometry&loading=async`}
+          async
+          defer
+        />
         <AuthProvider>
           <div id="app-content" className="w-full min-h-screen">
             {children}

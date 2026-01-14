@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { FormInput, FormSelect, FormTextarea, FormCheckbox, FileUploadZone } from "@/components/ui/FormElements";
 
 // Dynamic import for Map
-const LocationPicker = dynamic(() => import("./LocationPicker"), {
+const LocationPicker = dynamic(() => import("@/components/maps/SmartLocationPicker"), {
     ssr: false,
     loading: () => <div className="h-[300px] w-full bg-slate-50 animate-pulse rounded-2xl flex items-center justify-center text-slate-400 border-2 border-dashed border-slate-200">Initializing Map...</div>
 });
@@ -178,9 +178,9 @@ export default function PropertyForm({ initialData, onSubmit, loading, isEditMod
                 </div>
                 <div className="rounded-2xl overflow-hidden border-4 border-white shadow-xl">
                     <LocationPicker
-                        latitude={Number(formData.latitude)}
-                        longitude={Number(formData.longitude)}
-                        onLocationChange={(lat, lng) => setFormData(p => ({ ...p, latitude: lat, longitude: lng }))}
+                        initialLat={Number(formData.latitude)}
+                        initialLng={Number(formData.longitude)}
+                        onLocationSelect={(lat, lng) => setFormData(p => ({ ...p, latitude: lat, longitude: lng }))}
                     />
                 </div>
             </FormSection>

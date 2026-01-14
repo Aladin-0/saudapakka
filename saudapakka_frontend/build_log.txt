@@ -1,0 +1,26 @@
+
+> saudapakka_frontend@0.1.0 build
+> next build --no-lint
+
+ ⚠ Linting is disabled.
+   ▲ Next.js 15.5.6
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+Failed to compile.
+
+./src/app/admin/properties/create/page.tsx
+Module not found: Can't resolve '@/components/location-picker'
+
+https://nextjs.org/docs/messages/module-not-found
+
+./src/components/admin/PropertyForm.tsx
+Module not found: Can't resolve './LocationPicker'
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/app/admin/properties/[id]/edit/page.tsx
+
+
+> Build failed because of webpack errors

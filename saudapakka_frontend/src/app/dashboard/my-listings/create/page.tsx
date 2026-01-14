@@ -18,9 +18,9 @@ import {
 import Link from "next/link";
 
 // --- Dynamic Imports ---
-const LocationPicker = dynamic(() => import("@/components/location-picker"), {
+const SmartLocationPicker = dynamic(() => import("@/components/maps/SmartLocationPicker"), {
   ssr: false,
-  loading: () => <div className="h-[300px] w-full bg-gray-100 animate-pulse rounded-xl" />
+  loading: () => <div className="h-[400px] w-full bg-gray-100 animate-pulse rounded-xl" />
 });
 
 // --- Constants ---
@@ -563,17 +563,25 @@ export default function CreatePropertyPage() {
                   <p className="text-gray-500 text-sm sm:text-base">Precise location helps buyers find your property faster.</p>
                 </div>
 
-                <div className="bg-white p-2 sm:p-4 rounded-2xl shadow-sm border-2 border-gray-200 overflow-hidden h-64 sm:h-96 md:h-[400px] relative">
-                  <LocationPicker
+                <div className="bg-white p-2 sm:p-4 rounded-2xl shadow-sm border-2 border-gray-200 overflow-hidden relative">
+                  <SmartLocationPicker
                     initialLat={formData.latitude}
                     initialLng={formData.longitude}
-                    onLocationSelect={(lat, lng) => setFormData(p => ({ ...p, latitude: lat, longitude: lng }))}
+                    onLocationSelect={(lat, lng, address) => {
+                      setFormData(p => ({
+                        ...p,
+                        latitude: lat,
+                        longitude: lng,
+                        city: address.city || p.city,
+                        locality: address.street || address.city || p.locality,
+                        pincode: address.pincode || p.pincode
+                      }));
+                      setAddressLines(p => ({
+                        ...p,
+                        line1: p.line1 || (address.formatted_address ? address.formatted_address.split(',')[0] : "")
+                      }));
+                    }}
                   />
-                  <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-md border border-gray-200 flex items-center gap-2 text-xs font-semibold text-gray-700">
-                    <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
-                    <span className="hidden sm:inline">Drag marker to adjust</span>
-                    <span className="sm:hidden">Drag pin</span>
-                  </div>
                 </div>
 
                 <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-200 space-y-6">

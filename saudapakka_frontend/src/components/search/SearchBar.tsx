@@ -1,8 +1,17 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from "next/navigation";
-import { Search, SlidersHorizontal, Home, ArrowRight, X } from "lucide-react";
+import { Search, SlidersHorizontal, Home, ArrowRight, X, Loader2 } from "lucide-react";
+import { usePlacesAutocomplete } from '@/hooks/usePlacesAutocomplete';
+
+interface SelectedPlace {
+    lat: number;
+    lng: number;
+    address: string;
+    name: string;
+    place_id: string;
+}
 
 export default function SearchBar() {
     const router = useRouter();
@@ -10,18 +19,78 @@ export default function SearchBar() {
     // --- STATE ---
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const [listingType, setListingType] = useState("SALE"); // Synced with backend 'SALE'
+    const [listingType, setListingType] = useState("SALE");
+    const [selectedPlace, setSelectedPlace] = useState<SelectedPlace | null>(null);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [highlightedIndex, setHighlightedIndex] = useState(-1);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // Advanced Filters
     const [propertyType, setPropertyType] = useState("ALL");
     const [budget, setBudget] = useState("ANY");
     const [bedrooms, setBedrooms] = useState("ANY");
 
-    // --- ACTIONS ---
-    const handleSearch = () => {
+    // Google Places Autocomplete Hook
+    const { predictions, isLoading: suggestionsLoading, error: suggestionsError, getSuggestions, selectPlace } = usePlacesAutocomplete();
+
+    // --- DEBOUNCED INPUT HANDLER ---
+    const handleSearchInputChange = useCallback((value: string) => {
+        setSearchQuery(value);
+        setHighlightedIndex(-1);
+
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
+
+        if (value.trim()) {
+            setShowDropdown(true);
+            debounceTimerRef.current = setTimeout(() => {
+                getSuggestions(value);
+            }, 300); // 300ms debounce
+        } else {
+            setShowDropdown(false);
+        }
+    }, [getSuggestions]);
+
+    // --- SELECT SUGGESTION ---
+    const handleSelectSuggestion = useCallback(async (placeId: string) => {
+        const place = await selectPlace(placeId);
+        const prediction = predictions?.find(p => p.place_id === placeId);
+        const mainText = prediction?.structured_formatting.main_text;
+
+        if (place) {
+            const placeData: SelectedPlace = {
+                lat: place.lat,
+                lng: place.lng,
+                address: place.address.formatted_address,
+                name: mainText || place.address.formatted_address,
+                place_id: placeId,
+            };
+            setSelectedPlace(placeData);
+            setSearchQuery(mainText || place.address.formatted_address);
+            setShowDropdown(false);
+            setHighlightedIndex(-1);
+        }
+    }, [selectPlace, predictions]);
+
+    // --- SEARCH HANDLER ---
+    const handleSearch = useCallback(() => {
         const params = new URLSearchParams();
 
-        if (searchQuery.trim()) params.append("q", searchQuery);
+        // Priority 1: Use selected place with coordinates
+        if (selectedPlace?.lat && selectedPlace?.lng) {
+            params.append("lat", selectedPlace.lat.toString());
+            params.append("lng", selectedPlace.lng.toString());
+            params.append("location", selectedPlace.address);
+            params.append("q", selectedPlace.name || searchQuery);
+        }
+        // Priority 2: Use search query
+        else if (searchQuery.trim()) {
+            params.append("q", searchQuery);
+        }
+
         if (listingType) params.append("type", listingType);
 
         // Advanced params
@@ -34,7 +103,86 @@ export default function SearchBar() {
         }
 
         router.push(`/search?${params.toString()}`);
-    };
+        setShowDropdown(false);
+    }, [selectedPlace, searchQuery, listingType, propertyType, budget, bedrooms, router]);
+
+    // --- KEYBOARD NAVIGATION ---
+    const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (!showDropdown) {
+            if (e.key === 'Enter') {
+                handleSearch();
+            }
+            return;
+        }
+
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                setHighlightedIndex((prev) =>
+                    prev < (predictions?.length || 0) - 1 ? prev + 1 : prev
+                );
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+                break;
+            case 'Enter':
+                e.preventDefault();
+                if (highlightedIndex >= 0 && predictions?.[highlightedIndex]) {
+                    handleSelectSuggestion(predictions[highlightedIndex].place_id);
+                } else {
+                    handleSearch();
+                }
+                break;
+            case 'Escape':
+                e.preventDefault();
+                setShowDropdown(false);
+                break;
+            case 'Backspace':
+                if (selectedPlace) {
+                    setSelectedPlace(null);
+                }
+                break;
+        }
+    }, [showDropdown, highlightedIndex, predictions, handleSelectSuggestion, handleSearch]);
+
+    // --- CLEAR INPUT ---
+    const handleClearInput = useCallback(() => {
+        setSearchQuery("");
+        setSelectedPlace(null);
+        setShowDropdown(false);
+        setHighlightedIndex(-1);
+        if (inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, []);
+
+    // --- CLICK OUTSIDE HANDLER ---
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                if (inputRef.current && !inputRef.current.contains(event.target as Node)) {
+                    setShowDropdown(false);
+                }
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    // --- CLEANUP ---
+    useEffect(() => {
+        return () => {
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+            }
+        };
+    }, []);
+
+
 
     const clearFilters = () => {
         setPropertyType("ALL");
@@ -42,21 +190,19 @@ export default function SearchBar() {
         setBedrooms("ANY");
         setListingType("SALE");
         setSearchQuery("");
+        setSelectedPlace(null);
     };
 
     // Helper to handle Quick Filters
     const handleQuickFilter = (type: string) => {
         if (type === 'COMMERCIAL') {
             setPropertyType('COMMERCIAL_UNIT');
-            setListingType('SALE'); // Assume sale primarily
+            setListingType('SALE');
         } else if (type === 'PLOTS') {
             setPropertyType('PLOT');
             setListingType('SALE');
         } else {
-            setListingType(type); // BUY (SALE) or RENT
-            // Reset specific property type if switching back to generic buy/rent to allow user choice? 
-            // Or keep it. Let's keep it but if it was Commercial maybe reset?
-            // Actually simpler: Just set listing type.
+            setListingType(type);
         }
     };
 
@@ -68,17 +214,87 @@ export default function SearchBar() {
             <div className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-full shadow-2xl transition-all hover:shadow-3xl">
                 <div className="relative flex flex-col sm:flex-row items-center p-2">
 
-                    {/* Mobile: Search Icon + Input */}
-                    <div className="flex items-center w-full sm:w-auto flex-1 pl-2 sm:pl-4">
+                    {/* Mobile: Search Icon + Input with Autocomplete */}
+                    <div className="flex items-center w-full sm:w-auto flex-1 pl-2 sm:pl-4 relative">
                         <Search className="w-5 h-5 text-[#4A9B6D] shrink-0" />
                         <input
+                            ref={inputRef}
                             type="text"
                             placeholder="Search city, locality, project..."
                             className="w-full bg-transparent border-none outline-none text-gray-800 placeholder-gray-500 text-base py-3 px-3 min-w-0"
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') handleSearch() }}
+                            onChange={(e) => handleSearchInputChange(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            onFocus={() => searchQuery && setShowDropdown(true)}
+                            autoComplete="off"
                         />
+
+                        {/* Loading Spinner */}
+                        {suggestionsLoading && (
+                            <Loader2 className="w-4 h-4 text-[#4A9B6D] animate-spin mr-2 shrink-0" />
+                        )}
+
+                        {/* Clear Button */}
+                        {searchQuery && (
+                            <button
+                                onClick={handleClearInput}
+                                className="p-1 hover:bg-gray-100 rounded mr-2 shrink-0 transition-colors"
+                                aria-label="Clear search"
+                            >
+                                <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                            </button>
+                        )}
+
+                        {/* Autocomplete Dropdown */}
+                        {showDropdown && (
+                            <div
+                                ref={dropdownRef}
+                                className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-y-auto z-50"
+                            >
+                                {/* Error State */}
+                                {suggestionsError && (
+                                    <div className="p-4 text-red-600 text-sm">
+                                        {suggestionsError}
+                                    </div>
+                                )}
+
+                                {/* Loading State */}
+                                {suggestionsLoading && (
+                                    <div className="p-4 text-gray-600 text-sm flex items-center gap-2">
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Loading suggestions...
+                                    </div>
+                                )}
+
+                                {/* Suggestions List */}
+                                {!suggestionsLoading && predictions && predictions.length > 0 ? (
+                                    <ul className="py-1">
+                                        {predictions.map((pred, index) => (
+                                            <li
+                                                key={pred.place_id}
+                                                onClick={() => handleSelectSuggestion(pred.place_id)}
+                                                className={`px-4 py-3 cursor-pointer transition-colors border-b last:border-b-0
+                                                    ${highlightedIndex === index
+                                                        ? 'bg-[#4A9B6D] text-white'
+                                                        : 'hover:bg-[#E8F5E9] text-gray-900'
+                                                    }`}
+                                            >
+                                                <div className="font-semibold text-sm">{pred.structured_formatting.main_text}</div>
+                                                <div className={`text-xs ${highlightedIndex === index ? 'text-green-100' : 'text-gray-500'}`}>
+                                                    {pred.structured_formatting.secondary_text}
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    !suggestionsLoading && searchQuery && (
+                                        <div className="p-4 text-gray-400 text-sm text-center">
+                                            No results found for "{searchQuery}"
+                                        </div>
+                                    )
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Divider (Desktop Only) */}
@@ -91,7 +307,7 @@ export default function SearchBar() {
                         <button
                             onClick={() => setIsFilterOpen(!isFilterOpen)}
                             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl sm:rounded-full font-medium text-sm transition-all sm:w-auto flex-1 sm:flex-none justify-center
-                ${isFilterOpen ? 'bg-[#E8F5E9] text-[#2D5F3F]' : 'bg-gray-100/80 text-gray-700 hover:bg-gray-200'}`}
+                                ${isFilterOpen ? 'bg-[#E8F5E9] text-[#2D5F3F]' : 'bg-gray-100/80 text-gray-700 hover:bg-gray-200'}`}
                         >
                             <SlidersHorizontal className="w-4 h-4" />
                             <span className="hidden xs:inline">Filters</span>
@@ -112,7 +328,7 @@ export default function SearchBar() {
             {/* Expandable Filters Panel */}
             <div
                 className={`overflow-hidden transition-all duration-300 ease-in-out origin-top 
-        ${isFilterOpen ? 'max-h-[800px] opacity-100 mt-4' : 'max-h-0 opacity-0 mt-0'}`}
+                    ${isFilterOpen ? 'max-h-[800px] opacity-100 mt-4' : 'max-h-0 opacity-0 mt-0'}`}
             >
                 <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/20">
 
@@ -122,7 +338,7 @@ export default function SearchBar() {
                             <button
                                 onClick={() => handleQuickFilter('SALE')}
                                 className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap
-                                ${listingType === 'SALE' && propertyType === 'ALL'
+                                    ${listingType === 'SALE' && propertyType === 'ALL'
                                         ? 'bg-[#4A9B6D] text-white shadow-md'
                                         : 'bg-white border border-gray-200 text-gray-600 hover:border-[#4A9B6D]'}`}
                             >
@@ -131,7 +347,7 @@ export default function SearchBar() {
                             <button
                                 onClick={() => handleQuickFilter('RENT')}
                                 className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap
-                                ${listingType === 'RENT'
+                                    ${listingType === 'RENT'
                                         ? 'bg-[#4A9B6D] text-white shadow-md'
                                         : 'bg-white border border-gray-200 text-gray-600 hover:border-[#4A9B6D]'}`}
                             >
@@ -140,7 +356,7 @@ export default function SearchBar() {
                             <button
                                 onClick={() => handleQuickFilter('PLOTS')}
                                 className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap
-                                ${propertyType === 'PLOT'
+                                    ${propertyType === 'PLOT'
                                         ? 'bg-[#4A9B6D] text-white shadow-md'
                                         : 'bg-white border border-gray-200 text-gray-600 hover:border-[#4A9B6D]'}`}
                             >
@@ -149,7 +365,7 @@ export default function SearchBar() {
                             <button
                                 onClick={() => handleQuickFilter('COMMERCIAL')}
                                 className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap
-                                ${propertyType === 'COMMERCIAL_UNIT'
+                                    ${propertyType === 'COMMERCIAL_UNIT'
                                         ? 'bg-[#4A9B6D] text-white shadow-md'
                                         : 'bg-white border border-gray-200 text-gray-600 hover:border-[#4A9B6D]'}`}
                             >
@@ -204,7 +420,7 @@ export default function SearchBar() {
                                             key={opt}
                                             onClick={() => setBedrooms(opt)}
                                             className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all
-                      ${bedrooms === opt ? 'bg-white text-[#4A9B6D] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                                ${bedrooms === opt ? 'bg-white text-[#4A9B6D] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                                         >
                                             {opt === 'ANY' ? 'All' : opt}
                                         </button>

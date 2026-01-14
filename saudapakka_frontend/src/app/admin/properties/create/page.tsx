@@ -19,7 +19,7 @@ import {
 import Link from "next/link";
 
 // --- Dynamic Imports ---
-const LocationPicker = dynamic(() => import("@/components/location-picker"), {
+const LocationPicker = dynamic(() => import("@/components/maps/SmartLocationPicker"), {
     ssr: false,
     loading: () => <div className="h-[300px] w-full bg-gray-100 animate-pulse rounded-xl" />
 });
