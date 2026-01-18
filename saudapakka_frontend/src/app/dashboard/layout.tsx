@@ -69,13 +69,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     // Prioritize specific category if available
     if (user?.role_category) {
+      if (user.role_category === 'BROKER') return { label: "Real Estate Agent", color: "bg-blue-500" };
+
       // Use existing colors based on underlying role
       const color = user.is_active_broker ? "bg-blue-500" :
         user.is_active_seller ? "bg-purple-500" : "bg-accent-green";
       return { label: user.role_category.replace('_', ' '), color };
     }
 
-    if (user?.is_active_broker) return { label: "Broker", color: "bg-blue-500" };
+    if (user?.is_active_broker) return { label: "Real Estate Agent", color: "bg-blue-500" };
     if (user?.is_active_seller) return { label: "Seller", color: "bg-purple-500" };
     return { label: "Consumer", color: "bg-accent-green" };
   };

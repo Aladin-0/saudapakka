@@ -305,10 +305,10 @@ export default function OverviewPage() {
         </div>
         <div className="flex gap-3 items-center">
           {/* Role Chip */}
-          <div className="text-sm font-bold px-4 py-2 rounded-full border border-gray-100 uppercase tracking-wider
+          {/* <div className="text-sm font-bold px-4 py-2 rounded-full border border-gray-100 uppercase tracking-wider
                 bg-blue-50 text-blue-700">
             {user.role_category?.replace('_', ' ') || (user.is_active_broker ? 'BROKER' : user.is_active_seller ? 'SELLER' : 'BUYER')}
-          </div>
+          </div> */}
 
           <div className="text-sm text-gray-400 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
             {currentDate}

@@ -80,7 +80,7 @@ export default function KYCPage() {
           <div className="space-y-6 max-w-md">
             <div className="prose text-gray-500 text-sm leading-relaxed">
               <p>
-                To maintain a verified community of trusted Sellers and Brokers, we require a one-time identity check.
+                To maintain a verified community of trusted Sellers and Real Estate Agents, we require a one-time identity check.
               </p>
               <ul className="list-disc pl-5 space-y-2 mt-4">
                 <li>You will be redirected to the official <strong>DigiLocker</strong> portal.</li>
@@ -150,9 +150,9 @@ export default function KYCPage() {
                 <CheckCircle2 className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-gray-800">Broker Account</h4>
+                <h4 className="text-sm font-bold text-gray-800">Agent Account</h4>
                 <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                  Register as a professional broker and manage client portfolios.
+                  Register as a professional Real Estate Agent and manage client portfolios.
                 </p>
               </div>
             </li>

@@ -144,7 +144,7 @@ export default function AdminMandatesPage() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className="text-sm font-medium text-gray-700 bg-gray-100 px-2 py-1 rounded">
-                                            {mandate.deal_type === 'WITH_PLATFORM' ? 'Platform' : 'Broker'}
+                                            {mandate.deal_type === 'WITH_PLATFORM' ? 'Platform' : 'Real Estate Agent'}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">

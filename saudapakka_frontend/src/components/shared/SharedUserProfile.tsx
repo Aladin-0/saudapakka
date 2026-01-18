@@ -76,9 +76,15 @@ export default function SharedUserProfile() {
                                         Administrator
                                     </Badge>
                                 ) : (
-                                    <Badge variant={user.role_category === 'BROKER' ? 'default' : 'secondary'} className="px-3 py-1 text-sm font-medium">
-                                        {user.role_category?.replace('_', ' ') || "USER"}
-                                    </Badge>
+                                    user.role_category === 'BROKER' ? (
+                                        <Badge variant='default' className="px-3 py-1 text-sm font-medium">
+                                            Real Estate Agent
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant='secondary' className="px-3 py-1 text-sm font-medium">
+                                            {user.role_category?.replace('_', ' ') || "USER"}
+                                        </Badge>
+                                    )
                                 )}
                             </div>
                         </div>
@@ -113,14 +119,14 @@ export default function SharedUserProfile() {
                                 <div className="space-y-1">
                                     <CardTitle className="text-lg font-semibold flex items-center gap-2 text-blue-900">
                                         <Briefcase className="w-5 h-5 text-blue-600" />
-                                        Broker Professional Details
+                                        Professional Details
                                     </CardTitle>
                                     <CardDescription className="text-blue-700/80">
                                         These details are visible to potential clients and partners.
                                     </CardDescription>
                                 </div>
                                 {user.broker_profile.is_verified && (
-                                    <Badge className="bg-blue-600 hover:bg-blue-700">Verified Broker</Badge>
+                                    <Badge className="bg-blue-600 hover:bg-blue-700">Verified Agent</Badge>
                                 )}
                             </div>
                         </CardHeader>

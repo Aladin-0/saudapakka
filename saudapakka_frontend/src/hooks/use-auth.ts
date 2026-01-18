@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import Cookies from 'js-cookie';
 import api from '@/lib/axios';
@@ -14,6 +14,7 @@ interface User {
   is_active_broker: boolean;
   is_staff: boolean;
   kyc_verified?: boolean;
+  kyc_status?: string;
   role_category?: string;
   is_superuser?: boolean;
   broker_profile?: {
@@ -54,8 +55,7 @@ export const useAuth = create<AuthState>()(
           // Only update if data actually changed to prevent re-renders
           if (JSON.stringify(currentUser) !== JSON.stringify(res.data)) {
             set({ user: res.data });
-            console.log("✅ Auth State Synchronized:", res.data);
-          }
+}
         } catch (error: any) {
           console.error("Failed to refresh user data", error);
           if (error.response?.status === 401) {

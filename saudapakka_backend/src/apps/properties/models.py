@@ -134,19 +134,21 @@ class Property(models.Model):
     floor_plan = models.ImageField(upload_to='properties/floor_plans/', null=True, blank=True)
     
     # Verification Documents (Comprehensive List)
-    building_commencement_certificate = models.FileField(upload_to='properties/docs/', null=True, blank=False, max_length=255)
-    building_completion_certificate = models.FileField(upload_to='properties/docs/', null=True, blank=False, max_length=255)
-    layout_sanction = models.FileField(upload_to='properties/docs/', null=True, blank=False, max_length=255)
-    layout_order = models.FileField(upload_to='properties/docs/', null=True, blank=False, max_length=255)
-    na_order_or_gunthewari = models.FileField(upload_to='properties/docs/', null=True, blank=False, max_length=255)
-    mojani_nakasha = models.FileField(upload_to='properties/docs/', null=True, blank=False, max_length=255) # Renamed from doc_mojani
-    doc_7_12_or_pr_card = models.FileField(upload_to='properties/docs/', null=True, blank=False, max_length=255) # Renamed from doc_7_12
-    title_search_report = models.FileField(upload_to='properties/docs/', null=True, blank=False, max_length=255)
+    building_commencement_certificate = models.FileField(upload_to='properties/docs/', null=True, blank=True, max_length=255)
+    building_completion_certificate = models.FileField(upload_to='properties/docs/', null=True, blank=True, max_length=255)
+    layout_sanction = models.FileField(upload_to='properties/docs/', null=True, blank=True, max_length=255)
+    layout_order = models.FileField(upload_to='properties/docs/', null=True, blank=True, max_length=255)
+    na_order_or_gunthewari = models.FileField(upload_to='properties/docs/', null=True, blank=True, max_length=255)
+    mojani_nakasha = models.FileField(upload_to='properties/docs/', null=True, blank=True, max_length=255)
+    doc_7_12_or_pr_card = models.FileField(upload_to='properties/docs/', null=True, blank=True, max_length=255)
+    title_search_report = models.FileField(upload_to='properties/docs/', null=True, blank=True, max_length=255)
     
     # Optional Verification Documents
     rera_project_certificate = models.FileField(upload_to='properties/docs/', null=True, blank=True, max_length=255)
     gst_registration = models.FileField(upload_to='properties/docs/', null=True, blank=True, max_length=255)
     sale_deed_registration_copy = models.FileField(upload_to='properties/docs/', null=True, blank=True, max_length=255)
+    electricity_bill = models.FileField(upload_to='properties/docs/', null=True, blank=True, max_length=255)
+    sale_deed = models.FileField(upload_to='properties/docs/', null=True, blank=True, max_length=255)
 
     # --- 8. Contact Info ---
     listed_by = models.CharField(max_length=20, choices=[

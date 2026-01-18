@@ -111,6 +111,49 @@ class PropertyViewSet(viewsets.ModelViewSet):
                     order=i
                 )
 
+    def perform_update(self, serializer):
+        """
+        Handle updates including:
+        1. Standard field updates
+        2. Image deletions (images_to_delete)
+        3. New floor plan uploads (floor_plans)
+        """
+        # 1. Save standard fields
+        property_instance = serializer.save()
+
+        # 2. Handle Image Deletions
+        # Frontend sends list of IDs to delete
+        images_to_delete = self.request.data.getlist('images_to_delete')
+        if images_to_delete:
+            try:
+                # Filter strictly by this property to ensure security
+                # IDs are integers for PropertyImage
+                image_ids = [int(x) for x in images_to_delete if str(x).isdigit()]
+                if image_ids:
+                    PropertyImage.objects.filter(
+                        property=property_instance,
+                        id__in=image_ids
+                    ).delete()
+            except Exception as e:
+                # Log error but don't fail the whole update
+                print(f"Error deleting images: {e}")
+
+        # 3. Handle New Floor Plan Uploads
+        # Similar to create, but appending
+        floor_plans = self.request.FILES.getlist('floor_plans')
+        if floor_plans:
+            from .models import PropertyFloorPlan
+            # Get current max order to append correctly
+            # We assume order is 0-based index
+            current_max_order = PropertyFloorPlan.objects.filter(property=property_instance).count()
+            
+            for i, fp_file in enumerate(floor_plans):
+                PropertyFloorPlan.objects.create(
+                    property=property_instance,
+                    image=fp_file,
+                    order=current_max_order + i
+                )
+
     # --- IMAGE MANAGEMENT ---
 
     @action(detail=True, methods=['post'], url_path='upload_image')

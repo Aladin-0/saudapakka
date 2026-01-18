@@ -1,4 +1,4 @@
-import { startOfDay } from 'date-fns';
+﻿import { startOfDay } from 'date-fns';
 
 type RequestType = 'autocomplete' | 'details' | 'geocode' | 'reverse-geocode' | 'geolocation';
 
@@ -76,8 +76,7 @@ class RequestMonitor {
 
         // Warn if hitting limits (simple heuristic)
         if (this.metrics.total > 100 && this.metrics.total % 50 === 0) {
-            console.warn(`[Google Maps Monitor] High request count: ${this.metrics.total} today.`);
-        }
+}
 
         this.saveMetrics();
     }
@@ -99,3 +98,4 @@ class RequestMonitor {
 }
 
 export const requestMonitor = new RequestMonitor();
+

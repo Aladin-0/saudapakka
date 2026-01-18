@@ -56,6 +56,27 @@ export const getAutocompleteService = async (): Promise<google.maps.places.Autoc
 
 export const getSessionToken = async (): Promise<google.maps.places.AutocompleteSessionToken> => {
     await waitForGoogleMaps();
+
+    // Additional wait for Places library specifically
+    if (!google.maps.places) {
+        await new Promise<void>((resolve) => {
+            const interval = setInterval(() => {
+                if (google.maps.places) {
+                    clearInterval(interval);
+                    resolve();
+                }
+            }, 100);
+            // Fallback timeout
+            setTimeout(() => { clearInterval(interval); resolve(); }, 3000);
+        });
+    }
+
+    if (!google.maps.places) {
+        // Should ideally handle this more gracefully or retry, but for now log it
+        console.warn("Google Maps Places library missing despite wait.");
+        throw new Error("Google Maps Places library not loaded");
+    }
+
     if (!sessionToken) {
         sessionToken = new google.maps.places.AutocompleteSessionToken();
     }

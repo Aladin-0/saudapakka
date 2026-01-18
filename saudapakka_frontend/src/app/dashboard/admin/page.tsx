@@ -149,7 +149,7 @@ export default function AdminDashboardPage() {
                     </div>
                     <div className="text-2xl font-bold text-gray-900 mb-1">{stats.users.sellers}</div>
                     <div className="text-xs text-gray-400">
-                        & {stats.users.brokers} Brokers
+                        & {stats.users.brokers} Real Estate Agents
                     </div>
                 </div>
 

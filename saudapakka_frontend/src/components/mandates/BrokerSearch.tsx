@@ -25,10 +25,10 @@ const BrokerSearch: React.FC<BrokerSearchProps> = ({ onSelect, selectedBroker })
             const data = await mandateService.searchBroker(mobile);
             setResults(data);
             if (data.length === 0) {
-                setError('No active broker found with this number.');
+                setError('No active agent found with this number.');
             }
         } catch (err) {
-            setError('Failed to search broker. Please try again.');
+            setError('Failed to search agent. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -36,7 +36,7 @@ const BrokerSearch: React.FC<BrokerSearchProps> = ({ onSelect, selectedBroker })
 
     return (
         <div className="space-y-4">
-            <label className="block text-sm font-medium text-gray-700">Find a Broker</label>
+            <label className="block text-sm font-medium text-gray-700">Find an Agent</label>
 
             {!selectedBroker ? (
                 <div className="space-y-3">
@@ -45,7 +45,7 @@ const BrokerSearch: React.FC<BrokerSearchProps> = ({ onSelect, selectedBroker })
                             type="text"
                             value={mobile}
                             onChange={(e) => setMobile(e.target.value)}
-                            placeholder="Enter Broker's Mobile Number"
+                            placeholder="Enter Agent's Mobile Number"
                             className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary-green focus:border-transparent outline-none transition-all"
                         />
                         <button
@@ -73,7 +73,7 @@ const BrokerSearch: React.FC<BrokerSearchProps> = ({ onSelect, selectedBroker })
                                             {broker.full_name ? broker.full_name[0] : '?'}
                                         </div>
                                         <div>
-                                            <p className="font-medium text-gray-900">{broker.full_name || 'Unknown Broker'}</p>
+                                            <p className="font-medium text-gray-900">{broker.full_name || 'Unknown Agent'}</p>
                                             <p className="text-xs text-gray-500">{broker.mobile_number}</p>
                                         </div>
                                     </div>
@@ -100,7 +100,7 @@ const BrokerSearch: React.FC<BrokerSearchProps> = ({ onSelect, selectedBroker })
                         </div>
                         <div>
                             <p className="font-semibold text-gray-900">{selectedBroker.full_name}</p>
-                            <p className="text-sm text-gray-500">Selected Broker</p>
+                            <p className="text-sm text-gray-500">Selected Agent</p>
                         </div>
                     </div>
                     <button

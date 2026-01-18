@@ -100,6 +100,14 @@ export interface PropertyDetail {
     has_intercom?: boolean;
     has_piped_gas?: boolean;
     has_wifi?: boolean;
+    has_drainage_line?: boolean;
+    has_one_gate_entry?: boolean;
+    has_jogging_park?: boolean;
+    has_children_park?: boolean;
+    has_temple?: boolean;
+    has_water_line?: boolean;
+    has_street_light?: boolean;
+    has_internal_roads?: boolean;
 
     // Media & Contact
     images: PropertyImage[];
@@ -129,4 +137,7 @@ export interface PropertyDetail {
     mojani_nakasha?: string | null;
     doc_7_12_or_pr_card?: string | null;
     title_search_report?: string | null;
+    rera_project_certificate?: string | null;
+    gst_registration?: string | null;
+    sale_deed_registration_copy?: string | null;
 }

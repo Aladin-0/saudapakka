@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -32,16 +32,12 @@ export default function MyListingsPage() {
       setError(null);
 
       try {
-        console.log("=== FETCHING MY LISTINGS ===");
-
         // Fetch my listings with fallback
         let myListingsData = [];
         try {
           const myRes = await api.get("/api/properties/my_listings/");
           myListingsData = myRes.data || [];
-          console.log("✓ Loaded", myListingsData.length, "listings");
         } catch (err: any) {
-          console.warn("Custom endpoint failed, using fallback");
           const allRes = await api.get("/api/properties/");
           const userRes = await api.get("/api/auth/user/");
           const userId = userRes.data.id;
@@ -56,7 +52,6 @@ export default function MyListingsPage() {
           const savedRes = await api.get("/api/properties/my_saved/");
           savedListingsData = savedRes.data || [];
         } catch {
-          console.warn("Saved listings not available");
         }
 
         if (isMounted) {
@@ -162,8 +157,8 @@ export default function MyListingsPage() {
           <button
             onClick={() => setActiveTab("my")}
             className={`pb-3 px-2 font-medium transition-colors ${activeTab === "my"
-                ? "border-b-2 border-green-600 text-green-600"
-                : "text-gray-500 hover:text-gray-700"
+              ? "border-b-2 border-green-600 text-green-600"
+              : "text-gray-500 hover:text-gray-700"
               }`}
           >
             <Home className="w-4 h-4 inline mr-2" />
@@ -172,8 +167,8 @@ export default function MyListingsPage() {
           <button
             onClick={() => setActiveTab("saved")}
             className={`pb-3 px-2 font-medium transition-colors ${activeTab === "saved"
-                ? "border-b-2 border-green-600 text-green-600"
-                : "text-gray-500 hover:text-gray-700"
+              ? "border-b-2 border-green-600 text-green-600"
+              : "text-gray-500 hover:text-gray-700"
               }`}
           >
             <Heart className="w-4 h-4 inline mr-2" />
@@ -209,7 +204,7 @@ export default function MyListingsPage() {
                   </div>
                   <h3 className="font-bold text-lg mb-2 line-clamp-2">{property.title}</h3>
                   <p className="text-2xl font-bold text-green-600 mb-4">
-                    ₹{Number(property.total_price).toLocaleString('en-IN')}
+                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(property.total_price))}
                   </p>
                   <div className="flex gap-2">
                     <Link
@@ -253,7 +248,7 @@ export default function MyListingsPage() {
                   </div>
                   <h3 className="font-bold text-lg mb-2 line-clamp-2">{property.title}</h3>
                   <p className="text-2xl font-bold text-green-600 mb-4">
-                    ₹{Number(property.total_price).toLocaleString('en-IN')}
+                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(property.total_price))}
                   </p>
                 </div>
               ))
@@ -264,3 +259,4 @@ export default function MyListingsPage() {
     </div>
   );
 }
+

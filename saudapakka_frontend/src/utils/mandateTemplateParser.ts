@@ -1,4 +1,4 @@
-import { Mandate, BrokerProfile, InitiatedBy, DealType } from "@/types/mandate";
+import { Mandate, BrokerProfile, DealType } from "@/types/mandate";
 
 // Hardcoded template content 
 const TEMPLATE_TEXT = `* MANDATE LETTER(Marketing Authority) *

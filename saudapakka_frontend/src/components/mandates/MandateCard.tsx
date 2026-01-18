@@ -58,7 +58,7 @@ const MandateCard: React.FC<MandateCardProps> = ({ mandate }) => {
                             {mandate.broker_name && (
                                 <div className="flex items-center gap-2">
                                     <User className="w-4 h-4 text-gray-400" />
-                                    <span className="font-medium">Broker: {mandate.broker_name}</span>
+                                    <span className="font-medium">Real Estate Agent: {mandate.broker_name}</span>
                                 </div>
                             )}
                             {mandate.seller_name && (

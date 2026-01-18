@@ -39,7 +39,7 @@ export default function InitiateMandatePage() {
     const [selectedProperty, setSelectedProperty] = useState<number | string | null>(null);
     const [dealType, setDealType] = useState<DealType>(DealType.WITH_BROKER);
     const [selectedBroker, setSelectedBroker] = useState<BrokerProfile | null>(null);
-    const [commissionRate, setCommissionRate] = useState<number>(2.0); // New State
+    const [commissionRate, setCommissionRate] = useState<string>("2.0"); // Changed to string for better input handling
     const [signature, setSignature] = useState<File | null>(null);
     const [selfie, setSelfie] = useState<File | null>(null); // New State
     const [termsAccepted, setTermsAccepted] = useState(false);
@@ -115,7 +115,7 @@ export default function InitiateMandatePage() {
                 deal_type: dealType,
                 broker: user?.is_active_broker ? user.id : (dealType === DealType.WITH_BROKER ? selectedBroker?.id : undefined),
                 is_exclusive: true,
-                commission_rate: commissionRate
+                commission_rate: parseFloat(commissionRate) || 0
             };
 
             await mandateService.initiateMandate(payload, signature, selfie);
@@ -151,7 +151,7 @@ export default function InitiateMandatePage() {
         mandate: {
             seller_name: fullPropertyDetails?.owner_details?.full_name || "Property Owner",
             broker_name: user?.is_active_broker ? user.full_name : selectedBroker?.full_name,
-            commission_rate: commissionRate,
+            commission_rate: parseFloat(commissionRate) || 0,
             is_exclusive: true
         },
         property: fullPropertyDetails,
@@ -281,11 +281,12 @@ export default function InitiateMandatePage() {
                                         min="0"
                                         max="100"
                                         value={commissionRate}
-                                        onChange={(e) => setCommissionRate(parseFloat(e.target.value) || 0)}
+                                        onChange={(e) => setCommissionRate(e.target.value)}
                                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-green focus:border-primary-green pr-10"
                                     />
                                     <span className="absolute right-3 top-3 text-gray-500 font-medium">%</span>
                                 </div>
+
                                 <p className="text-xs text-gray-500 mt-1">Standard rate is 2.0%. You can adjust this as per agreement.</p>
                             </div>
                         </div>
@@ -385,7 +386,7 @@ export default function InitiateMandatePage() {
                                         property={fullPropertyDetails}
                                         mandate={{
                                             is_exclusive: true,
-                                            commission_rate: commissionRate,
+                                            commission_rate: parseFloat(commissionRate) || 0,
                                             broker_name: user?.is_active_broker ? user.full_name : selectedBroker?.full_name,
                                             // Show selfie if captured
                                             seller_selfie: !isBrokerInitiator && selfie ? URL.createObjectURL(selfie) : undefined,

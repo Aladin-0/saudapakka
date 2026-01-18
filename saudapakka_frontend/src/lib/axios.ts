@@ -1,4 +1,4 @@
-// src/lib/axios.ts
+﻿// src/lib/axios.ts
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
@@ -30,8 +30,7 @@ api.interceptors.request.use((config) => {
       }
     }
   }
-  console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);
-  return config;
+return config;
 });
 
 // Add response interceptor to handle 401 globally
@@ -54,8 +53,7 @@ const processQueue = (error: any, token: string | null = null) => {
 // Add response interceptor to handle 401 globally
 api.interceptors.response.use(
   (response) => {
-    console.log(`[API Response] ${response.config.url} - ${response.status}`);
-    return response;
+return response;
   },
   async (error) => {
     const originalRequest = error.config;
@@ -138,3 +136,4 @@ api.interceptors.response.use(
 );
 
 export default api;
+

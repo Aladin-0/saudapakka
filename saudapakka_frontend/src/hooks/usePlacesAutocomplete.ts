@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+﻿import { useState, useCallback, useRef, useEffect } from 'react';
 import { getAutocompleteService, getGeocoder, getSessionToken, refreshSessionToken } from '@/lib/google-maps/loader';
 import { autocompleteCache, placesDetailsCache } from '@/lib/google-maps/request-cache';
 import { requestMonitor } from '@/lib/google-maps/request-monitor';
@@ -42,8 +42,7 @@ export const usePlacesAutocomplete = () => {
         // 1. Check Cache
         const cached = autocompleteCache.get<PlacePrediction[]>(cacheKey);
         if (cached) {
-            console.log(`[Autocomplete] Cache Hit: ${trimmedInput}`);
-            requestMonitor.recordRequest('autocomplete', true);
+requestMonitor.recordRequest('autocomplete', true);
             setPredictions(cached);
             return;
         }
@@ -103,8 +102,7 @@ export const usePlacesAutocomplete = () => {
         const cacheKey = `details_${placeId}`;
         const cached = placesDetailsCache.get<any>(cacheKey);
         if (cached) {
-            console.log(`[PlaceDetails] Cache Hit: ${placeId}`);
-            requestMonitor.recordRequest('details', true);
+requestMonitor.recordRequest('details', true);
             return cached;
         }
 
@@ -177,3 +175,4 @@ export const usePlacesAutocomplete = () => {
 
     return { predictions, isLoading, error, getSuggestions, selectPlace, clearCache };
 };
+

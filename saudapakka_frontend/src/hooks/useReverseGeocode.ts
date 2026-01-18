@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+﻿import { useState, useCallback, useRef } from 'react';
 import { getGeocoder } from '@/lib/google-maps/loader';
 import { reverseGeocodeCache } from '@/lib/google-maps/request-cache';
 import { requestMonitor } from '@/lib/google-maps/request-monitor';
@@ -31,8 +31,7 @@ export const useReverseGeocode = () => {
         // 1. Check Cache
         const cached = reverseGeocodeCache.get<AddressResult>(cacheKey);
         if (cached) {
-            console.log(`[ReverseGeo] Cache Hit: ${cacheKey}`);
-            requestMonitor.recordRequest('reverse-geocode', true);
+requestMonitor.recordRequest('reverse-geocode', true);
             return cached;
         }
 
@@ -115,3 +114,4 @@ export const useReverseGeocode = () => {
 
     return { reverseGeocode, isLoading, error };
 };
+

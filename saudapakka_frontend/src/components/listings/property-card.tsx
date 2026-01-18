@@ -49,6 +49,14 @@ export default function PropertyCard({ property, onDelete, actionSlot }: { prope
     return `₹${price.toLocaleString("en-IN")}`;
   };
 
+  const formatBHK = (bhk: number | undefined | null) => {
+    if (bhk === undefined || bhk === null || bhk === 0) return null;
+    const val = Number(bhk);
+    if (val === 0.5) return "1 RK"; // Shortened for card
+    return Number.isInteger(val) ? val : val.toFixed(1);
+  };
+
+
   const isVerified = property.verification_status === "VERIFIED";
 
   // --- ACTIONS ---
@@ -238,8 +246,8 @@ export default function PropertyCard({ property, onDelete, actionSlot }: { prope
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-full text-sm">
             <Bed className="w-4 h-4 text-gray-500" />
-            <span className="font-semibold text-gray-700">{property.bhk_config}</span>
-            <span className="text-gray-400 text-xs">BHK</span>
+            <span className="font-semibold text-gray-700">{formatBHK(property.bhk_config)}</span>
+            <span className="text-gray-400 text-xs">{property.bhk_config === 0.5 ? "" : "BHK"}</span>
           </div>
           <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-full text-sm">
             <Bath className="w-4 h-4 text-gray-500" />

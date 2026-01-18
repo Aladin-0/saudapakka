@@ -71,7 +71,7 @@ export default function UserManagementModal({ user, isOpen, onClose, onUpdate }:
                                         onChange={(e) => setIsBroker(e.target.checked)}
                                         className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300"
                                     />
-                                    <span className="font-medium text-gray-900">Broker</span>
+                                    <span className="font-medium text-gray-900">Real Estate Agent</span>
                                 </label>
                                 <label className="flex items-center gap-3 p-3 border rounded-xl hover:bg-gray-50 cursor-pointer">
                                     <input
@@ -101,8 +101,8 @@ export default function UserManagementModal({ user, isOpen, onClose, onUpdate }:
                                 onClick={handleBlockToggle}
                                 disabled={isLoading}
                                 className={`w-full py-2 rounded-lg font-medium text-sm border ${user?.is_active
-                                        ? 'border-red-200 text-red-600 hover:bg-red-50'
-                                        : 'border-green-200 text-green-600 hover:bg-green-50'
+                                    ? 'border-red-200 text-red-600 hover:bg-red-50'
+                                    : 'border-green-200 text-green-600 hover:bg-green-50'
                                     }`}
                             >
                                 {user?.is_active ? 'Block Account' : 'Unblock Account'}

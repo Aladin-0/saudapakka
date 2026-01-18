@@ -171,7 +171,7 @@ export default function AdminUsersPage() {
                         onClick={() => setFilter("BROKER")}
                         className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${filter === 'BROKER' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
                     >
-                        Brokers <span className="ml-1 opacity-70">({roleCounts.broker})</span>
+                        Real Estate Agents <span className="ml-1 opacity-70">({roleCounts.broker})</span>
                     </button>
                     <button
                         onClick={() => setFilter("PLOTTING_AGENCY")}
@@ -245,7 +245,7 @@ export default function AdminUsersPage() {
                                                     </span>
                                                 ) : u.role_category === 'BROKER' || u.is_active_broker ? (
                                                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                                                        <ShieldCheckIcon className="w-3 h-3" /> Broker
+                                                        <ShieldCheckIcon className="w-3 h-3" /> Real Estate Agent
                                                     </span>
                                                 ) : u.role_category === 'SELLER' || u.is_active_seller ? (
                                                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">

@@ -126,7 +126,7 @@ export default function AdminMandateDetailsPage() {
                     <h1 className="text-2xl font-bold text-gray-900">Admin Verification: Mandate #{mandate.id}</h1>
                     <div className="flex items-center gap-2 mt-1">
                         <span className={`px-2 py-0.5 rounded text-xs font-bold ${isPlatformDeal ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
-                            {isPlatformDeal ? 'Platform Deal' : 'Broker Deal'}
+                            {isPlatformDeal ? 'Platform Deal' : 'Real Estate Agent Deal'}
                         </span>
                         <span className="text-sm text-gray-500">
                             • Created {new Date(mandate.created_at).toLocaleDateString()}

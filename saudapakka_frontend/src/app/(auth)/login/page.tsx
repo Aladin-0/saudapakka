@@ -138,7 +138,7 @@ export default function LoginPage() {
                       placeholder="name@example.com"
                       className="pl-11 h-12 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white focus:border-accent-green focus:ring-4 focus:ring-accent-green/10 transition-all text-base"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => setEmail(e.target.value.toLowerCase())}
                       onKeyDown={(e) => e.key === "Enter" && handleSendOtp()}
                     />
                   </div>

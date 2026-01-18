@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+﻿import { useState, useCallback, useRef } from 'react';
 import { requestMonitor } from '@/lib/google-maps/request-monitor';
 
 interface Location {
@@ -28,14 +28,12 @@ export const useGeolocation = (): GeolocationResult => {
         // 1. Check if allow: cooldown
         const now = Date.now();
         if (now - lastRequestTime.current < COOLDOWN_MS) {
-            console.warn(`[Geolocation] Ignored request: Cooldown active (${((COOLDOWN_MS - (now - lastRequestTime.current)) / 1000).toFixed(1)}s left)`);
-            return location; // Return cached/current state
+return location; // Return cached/current state
         }
 
         // 2. Check if pending: de-duplicate
         if (pendingRequest.current) {
-            console.log("[Geolocation] Request already in progress, returning promise.");
-            return pendingRequest.current;
+return pendingRequest.current;
         }
 
         setIsLoading(true);
@@ -99,3 +97,5 @@ export const useGeolocation = (): GeolocationResult => {
 
     return { location, isLoading, error, requestLocation };
 };
+
+

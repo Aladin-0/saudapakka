@@ -429,7 +429,7 @@ export const MandatePDFDocument = ({
                             <Text style={{ fontSize: 8, color: '#94a3b8', marginTop: 2 }}>Date: {initiationDateStr}</Text>
                         </View>
 
-                        {/* Broker */}
+                        {/* Agent */}
                         <View style={styles.signatureBlock}>
                             <View style={styles.signatureBox}>
                                 {signatureUrl ? (
@@ -439,7 +439,7 @@ export const MandatePDFDocument = ({
                                 )}
                             </View>
 
-                            {/* Broker Selfie */}
+                            {/* Agent Selfie */}
                             {brokerSelfieUrl && (
                                 <View style={styles.selfieContainer}>
                                     <Image src={brokerSelfieUrl} style={styles.selfieImage} />

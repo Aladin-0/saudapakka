@@ -61,6 +61,14 @@ export default function PropertyCardHorizontal({ property }: { property: Propert
         return "";
     };
 
+    const formatBHK = (bhk: number | undefined | null) => {
+        if (bhk === undefined || bhk === null || bhk === 0) return null;
+        const val = Number(bhk);
+        if (val === 0.5) return "1 RK";
+        return `${Number.isInteger(val) ? val : val.toFixed(1)} BHK`;
+    };
+
+
     const isVerified = property.verification_status === "VERIFIED";
     const isReady = property.availability_status === "READY" || property.property_status === "READY" || !property.availability_status;
 
@@ -156,7 +164,7 @@ export default function PropertyCardHorizontal({ property }: { property: Propert
                                 </h3>
                             </Link>
                             <p className="text-xs text-gray-500 truncate mt-0.5">
-                                <span className="text-blue-600 font-medium">{property.bhk_config} BHK {property.property_type.replace("_", " ")}</span>
+                                <span className="text-blue-600 font-medium">{formatBHK(property.bhk_config)} {property.property_type.replace("_", " ")}</span>
                                 {" "}in {property.locality}, {property.city}
                             </p>
                         </div>
@@ -181,8 +189,7 @@ export default function PropertyCardHorizontal({ property }: { property: Propert
                         </div>
                         <div className="flex items-center gap-1 text-xs text-gray-600">
                             <Bed className="w-3.5 h-3.5 text-gray-400" />
-                            <span className="font-semibold">{property.bhk_config}</span>
-                            <span className="text-gray-400">BHK</span>
+                            <span className="font-semibold">{formatBHK(property.bhk_config)}</span>
                         </div>
                         <div className="flex items-center gap-1 text-xs text-gray-600">
                             <Bath className="w-3.5 h-3.5 text-gray-400" />

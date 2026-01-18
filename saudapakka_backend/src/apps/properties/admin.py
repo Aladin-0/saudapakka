@@ -79,7 +79,9 @@ class PropertyAdmin(admin.ModelAdmin):
                 'title_search_report',
                 'rera_project_certificate',
                 'gst_registration',
-                'sale_deed_registration_copy'
+                'sale_deed_registration_copy',
+                'electricity_bill',
+                'sale_deed'
             )
         }),
         ('Amenities', {
@@ -95,7 +97,7 @@ class PropertyAdmin(admin.ModelAdmin):
     )
 
     # 5. Read-only fields
-    readonly_fields = ('created_at', 'price_per_sqft')
+    readonly_fields = ('created_at',)
 
     def owner_display(self, obj):
         """

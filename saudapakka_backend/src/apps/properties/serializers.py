@@ -79,7 +79,9 @@ class PropertySerializer(serializers.ModelSerializer):
             # Legal Docs (Optional)
             'rera_project_certificate',
             'gst_registration',
-            'sale_deed_registration_copy'
+            'sale_deed_registration_copy',
+            'electricity_bill',
+            'sale_deed'
         ]
         
         # --- Security: Fields that the user CANNOT change manually ---

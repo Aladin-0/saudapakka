@@ -1,0 +1,58 @@
+
+> saudapakka_frontend@0.1.0 build
+> next build --no-lint
+
+   ▲ Next.js 15.5.6
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 6.8s
+   Checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/25) ...
+   Generating static pages (6/25) 
+   Generating static pages (12/25) 
+   Generating static pages (18/25) 
+ ✓ Generating static pages (25/25)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                      11 kB         157 kB
+├ ○ /_not-found                             1 kB         103 kB
+├ ○ /admin                               3.61 kB         130 kB
+├ ○ /admin/mandates                      4.17 kB         130 kB
+├ ƒ /admin/mandates/[id]                 3.85 kB         658 kB
+├ ○ /admin/profile                         259 B         138 kB
+├ ○ /admin/properties                    9.66 kB         154 kB
+├ ƒ /admin/properties/[id]/edit           7.8 kB         131 kB
+├ ○ /admin/properties/create             13.7 kB         190 kB
+├ ƒ /admin/properties/edit/[id]            15 kB         191 kB
+├ ○ /admin/users                         5.21 kB         146 kB
+├ ○ /complete-profile                     5.7 kB         138 kB
+├ ○ /dashboard                            2.6 kB         126 kB
+├ ○ /dashboard/admin                      3.6 kB         130 kB
+├ ○ /dashboard/kyc                       3.98 kB         136 kB
+├ ○ /dashboard/kyc/callback              5.64 kB         138 kB
+├ ○ /dashboard/mandates                  5.83 kB         132 kB
+├ ƒ /dashboard/mandates/[id]             6.25 kB         661 kB
+├ ○ /dashboard/mandates/create           7.03 kB         148 kB
+├ ○ /dashboard/my-listings               4.03 kB         130 kB
+├ ○ /dashboard/my-listings/create        12.9 kB         189 kB
+├ ƒ /dashboard/my-listings/edit/[id]     13.7 kB         190 kB
+├ ○ /dashboard/overview                  6.44 kB         133 kB
+├ ○ /dashboard/profile                     257 B         138 kB
+├ ○ /dashboard/saved                     3.27 kB         130 kB
+├ ○ /login                               4.44 kB         142 kB
+├ ƒ /mandates/[id]                         128 B         102 kB
+├ ƒ /property/[id]                       14.2 kB         155 kB
+└ ○ /search                              6.24 kB         152 kB
++ First Load JS shared by all             102 kB
+  ├ chunks/1255-26f05d8bf86e016d.js      45.5 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js  54.2 kB
+  └ other shared chunks (total)           2.1 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

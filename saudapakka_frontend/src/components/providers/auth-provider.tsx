@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
@@ -22,8 +22,7 @@ export default function AuthProvider({
             } catch (error) {
                 // Silently fail - if they aren't logged in, they aren't logged in.
                 // We don't want to redirect from public pages.
-                console.warn("Auth check failed:", error);
-            } finally {
+} finally {
                 setIsReady(true);
             }
         };
@@ -35,3 +34,4 @@ export default function AuthProvider({
     // but the 'user' state will update asynchronously.
     return <>{children}</>;
 }
+

@@ -5,8 +5,8 @@ import { useGoogleMap } from '@/hooks/useGoogleMap';
 import { Loader2, MapPin } from 'lucide-react';
 
 interface MapViewerProps {
-    lat: number;
-    lng: number;
+    lat?: number;
+    lng?: number;
     title?: string;
     address?: string;
     zoom?: number;
@@ -25,15 +25,16 @@ export default function MapViewer({
     const markerRef = useRef<google.maps.Marker | null>(null);
 
     const { map, isLoading, error } = useGoogleMap(mapRef, {
-        initialCenter: { lat, lng },
+        initialCenter: { lat: lat || 0, lng: lng || 0 },
         initialZoom: zoom,
         mapTypeControl: true,
         streetViewControl: true
     });
 
     // Update marker when map loads or props change
+    // Update marker when map loads or props change
     useEffect(() => {
-        if (!map) return;
+        if (!map || !lat || !lng) return;
 
         // Move map
         map.setCenter({ lat, lng });

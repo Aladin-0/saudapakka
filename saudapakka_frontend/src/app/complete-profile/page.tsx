@@ -81,7 +81,7 @@ export default function CompleteProfilePage() {
     },
     {
       id: 'BROKER',
-      label: 'Broker',
+      label: 'Real Estate Agent',
       icon: Briefcase,
       description: 'Real estate professional',
       gradient: 'from-emerald-500 to-teal-500'
