@@ -83,7 +83,7 @@ class SandboxClient:
             response = requests.get(url, headers=headers, timeout=20)
             res_data = response.json()
             
-            print(f"DEBUG SANDBOX DATA: {res_data}")
+            # print(f"DEBUG SANDBOX DATA: {res_data}")
 
             # Case A: JSON Data provided directly
             if response.status_code == 200 and 'aadhaar_data' in res_data.get('data', {}):
@@ -93,7 +93,7 @@ class SandboxClient:
             files = res_data.get('data', {}).get('files', [])
             if response.status_code == 200 and len(files) > 0:
                 file_url = files[0].get('url')
-                print(f"DEBUG: Downloading XML from {file_url}")
+                # print(f"DEBUG: Downloading XML from {file_url}")
                 xml_res = requests.get(file_url, timeout=20)
                 # Call the parser method defined below
                 return self._parse_aadhaar_xml(xml_res.text)

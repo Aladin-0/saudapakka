@@ -261,12 +261,12 @@ export default function PropertyCard({ property, onDelete, actionSlot }: { prope
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-full text-sm">
             <Bed className="w-4 h-4 text-gray-500" />
-            <span className="font-semibold text-gray-700">{formatBHK(property.bhk_config)}</span>
+            <span className="font-semibold text-gray-700">{formatBHK(property.bhk_config || 0)}</span>
             <span className="text-gray-400 text-xs">{property.bhk_config === 0.5 ? "" : "BHK"}</span>
           </div>
           <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-full text-sm">
             <Bath className="w-4 h-4 text-gray-500" />
-            <span className="font-semibold text-gray-700">{property.bathrooms}</span>
+            <span className="font-semibold text-gray-700">{property.bathrooms || 0}</span>
           </div>
           <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-full text-sm">
             <Maximize className="w-4 h-4 text-gray-500" />

@@ -10,7 +10,7 @@ env = environ.Env(
     DEBUG=(bool, False)
 )
 
-# 2. Read the .env file
+# 2. Read the .env file (Attempt to read, ignore if missing in prod)
 environ.Env.read_env(os.path.join(BASE_DIR.parent, '.env'))
 
 
@@ -18,14 +18,14 @@ environ.Env.read_env(os.path.join(BASE_DIR.parent, '.env'))
 # SECURITY SETTINGS (Production Hardened)
 # =============================================================================
 
-# SECRET_KEY from environment variable (NEVER hardcode in production)
-# SECRET_KEY from environment variable (NEVER hardcode in production)
-SECRET_KEY = env.str('SECRET_KEY', default='dev-only-insecure-key-replace-in-production')
+SECRET_KEY = env('SECRET_KEY', default='django-insecure-dev-key-change-in-prod')
 
 DEBUG = env.bool('DEBUG', default=False)
 
-
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['saudapakka.com', '72.61.246.159', 'localhost', '127.0.0.1'])
+# Robust definition of ALLOWED_HOSTS
+# In production, this MUST be set via env var
+default_hosts = ['saudapakka.com', 'www.saudapakka.com', 'localhost', '127.0.0.1', 'saudapakka_backend']
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=default_hosts)
 
 
 # =============================================================================
@@ -93,14 +93,13 @@ WSGI_APPLICATION = 'saudapakka.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('POSTGRES_DB', 'saudapakka_db'),
-        'USER': os.environ.get('POSTGRES_USER', 'hello_django'),
+        'NAME':     os.environ.get('POSTGRES_DB', 'saudapakka_db'),
+        'USER':     os.environ.get('POSTGRES_USER', 'hello_django'),
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'hello_django'),
-        'HOST': os.environ.get('POSTGRES_HOST', 'postgres'),  # ← DEFAULT: postgres!
-        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+        'HOST':     os.environ.get('POSTGRES_HOST', 'postgres'),
+        'PORT':     os.environ.get('POSTGRES_PORT', '5432'),
     }
 }
-
 
 
 # =============================================================================
@@ -126,15 +125,17 @@ USE_TZ = True
 
 
 # =============================================================================
-# STATIC FILES (WhiteNoise for production)
+# STATIC & MEDIA FILES
 # =============================================================================
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# MEDIA CONFIGURATION (Critical for Production Docker Setup)
+# Nginx serves /media/ from /app/media
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = '/app/media'
 
 
 # =============================================================================
@@ -146,20 +147,25 @@ AUTH_USER_MODEL = 'users.User'
 
 
 # =============================================================================
-# EMAIL CONFIGURATION
+# EMAIL CONFIGURATION (Safe Parsing)
 # =============================================================================
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = env('EMAIL_HOST')
+EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = env.int('EMAIL_PORT', default=587)
 EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
-EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+
+# STRICTLY enforce format to avoid SMTP 555 errors
+_from_email_raw = env('DEFAULT_FROM_EMAIL', default='SaudaPakka <qutubahmad3@gmail.com>')
+# Strip any extra quotes someone might have added in .env logic
+_from_email_clean = _from_email_raw.replace('"', '').replace("'", "")
+DEFAULT_FROM_EMAIL = _from_email_clean
 
 
 # =============================================================================
-# REST FRAMEWORK & JWT (Production Security)
+# REST FRAMEWORK & JWT
 # =============================================================================
 
 REST_FRAMEWORK = {
@@ -181,8 +187,8 @@ REST_FRAMEWORK = {
 
 from datetime import timedelta
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=7),      # Production: 7 days
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     # Production: 7 days
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=7),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'AUTH_HEADER_TYPES': ('Bearer',),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
@@ -190,47 +196,59 @@ SIMPLE_JWT = {
 
 
 # =============================================================================
-# CORS CONFIGURATION (Production Locked)
+# CORS & CSRF CONFIGURATION
 # =============================================================================
 
-CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS', default=True) if DEBUG else env.bool('CORS_ALLOW_ALL_ORIGINS', default=False)
-CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
+# In production, we assume HTTPS. Ensure env vars align.
+# Default list for development
+default_origins = [
     "https://saudapakka.com",
-    "http://localhost",
+    "https://www.saudapakka.com",
     "http://localhost:3000",
-    "http://127.0.0.1",
     "http://127.0.0.1:3000",
-])
+]
+
+CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS', default=DEBUG)
+CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=default_origins)
 CORS_ALLOW_CREDENTIALS = True
 
-CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[
-    "https://saudapakka.com",
-    "http://localhost",
-    "http://localhost:3000",
-    "http://127.0.0.1",
-    "http://127.0.0.1:3000",
-])
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=default_origins)
 
 
 # =============================================================================
-# SECURITY HEADERS (Production Hardened)
+# SECURITY HEADERS & PRODUCTION FLAGS
 # =============================================================================
 
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
+# Trust the X-Forwarded-Proto header sent by Nginx (since we are behind a proxy)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 if not DEBUG:
+    # Production Security settings
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    
     SECURE_HSTS_SECONDS = 31536000  # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    SECURE_SSL_REDIRECT = True
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    
+    SECURE_SSL_REDIRECT = True  # Force HTTPS
+    
+    # Cookie security
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    CSRF_COOKIE_HTTPONLY = True
+    
     X_FRAME_OPTIONS = 'DENY'
-
+else:
+    # Relaxed settings for dev
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
 
 
 # =============================================================================
-# LOGGING (Production - JSON format for log aggregation)
+# LOGGING (Production)
 # =============================================================================
 
 LOGGING = {
@@ -243,10 +261,6 @@ LOGGING = {
         },
         'verbose': {
             'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {message}',
             'style': '{',
         },
     },
@@ -285,5 +299,5 @@ LOGGING = {
 # SANDBOX KYC CONFIGURATION
 # =============================================================================
 
-SANDBOX_API_KEY = env('SANDBOX_API_KEY')
-SANDBOX_API_SECRET = env('SANDBOX_API_SECRET')
+SANDBOX_API_KEY = env('SANDBOX_API_KEY', default='')
+SANDBOX_API_SECRET = env('SANDBOX_API_SECRET', default='')

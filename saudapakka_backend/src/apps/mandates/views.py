@@ -63,8 +63,6 @@ class MandateViewSet(viewsets.ModelViewSet):
         
         initiated_by_payload = self.request.data.get('initiated_by')
         
-        print(f"DEBUG: Mandate Creation Started by {user.email} ({user.id})")
-
         # Enforce server-side validation for initiated_by
         if user.is_active_broker:
              initiated_by = 'BROKER'
@@ -73,8 +71,6 @@ class MandateViewSet(viewsets.ModelViewSet):
         else:
              initiated_by = initiated_by_payload
         
-        print(f"DEBUG: initiated_by determined as: {initiated_by}")
-
         # Helper to ensure data integrity
         if initiated_by == 'BROKER' and not user.is_active_broker:
              raise ValidationError("You must be an active broker to initiate as BROKER.")
@@ -110,11 +106,9 @@ class MandateViewSet(viewsets.ModelViewSet):
                 broker_selfie=sys_broker_selfie
             )
             recipient = mandate.seller
-            print(f"DEBUG: Broker initiated. Recipient (Seller): {recipient}")
 
         elif initiated_by == 'SELLER':
             deal_type = self.request.data.get('deal_type')
-            print(f"DEBUG: Seller initiated. Deal Type: {deal_type}")
             
             sys_seller_sig = self.request.FILES.get('seller_signature') or self.request.data.get('seller_signature')
             sys_seller_selfie = self.request.FILES.get('seller_selfie') or self.request.data.get('seller_selfie')
@@ -133,7 +127,6 @@ class MandateViewSet(viewsets.ModelViewSet):
                  )
                  # Notify all admins
                  admins = User.objects.filter(is_superuser=True)
-                 print(f"DEBUG: Platform deal. Notifying {admins.count()} admins.")
                  for admin in admins:
                      self.notify_user(
                         recipient=admin,
@@ -143,7 +136,6 @@ class MandateViewSet(viewsets.ModelViewSet):
                      )
             else:
                 broker_id = self.request.data.get('broker')
-                print(f"DEBUG: Broker ID from request: {broker_id}")
                 if not broker_id:
                      raise ValidationError("You must specify which Broker you are hiring.")
                 mandate = serializer.save(
@@ -153,11 +145,9 @@ class MandateViewSet(viewsets.ModelViewSet):
                     seller_selfie=sys_seller_selfie
                 )
                 recipient = mandate.broker
-                print(f"DEBUG: Seller initiated with Broker. Recipient (Broker): {recipient}")
 
         # Send Notification to Partner (if not platform)
         if recipient:
-            print(f"DEBUG: Sending notification to {recipient.email}")
             self.notify_user(
                 recipient=recipient,
                 title="New Mandate Request",
@@ -165,9 +155,9 @@ class MandateViewSet(viewsets.ModelViewSet):
                 action_url=f"/dashboard/mandates/{mandate.id}"
             )
         elif deal_type == 'WITH_PLATFORM':
-            print("DEBUG: Platform Deal - Admins already notified.")
+            pass
         else:
-            print("DEBUG: WARNING - No recipient determined for this mandate!")
+            pass
 
     @action(detail=True, methods=['post'])
     def accept_and_sign(self, request, pk=None):

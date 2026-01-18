@@ -136,7 +136,8 @@ class PropertyViewSet(viewsets.ModelViewSet):
                     ).delete()
             except Exception as e:
                 # Log error but don't fail the whole update
-                print(f"Error deleting images: {e}")
+                # logger.error(f"Error deleting images: {e}")
+                pass
 
         # 3. Handle New Floor Plan Uploads
         # Similar to create, but appending

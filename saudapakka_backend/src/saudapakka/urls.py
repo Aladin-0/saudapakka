@@ -11,9 +11,9 @@ def health_check(request):
 
 urlpatterns = [
     path('health/', lambda r: JsonResponse({'status': 'healthy'}), name='health'),
-    path('admin/', admin.site.urls),
+    path('server-admin/', admin.site.urls),
     path('api/', include('apps.users.urls')),
-    path('api/', include('apps.properties.urls')), # <-- UNCOMMENT THIS NOW
+    path('api/', include('apps.properties.urls')),
     path('api/admin/', include('apps.admin_panel.urls')), 
     path('api/', include('apps.mandates.urls')),
     path('api/', include('apps.notifications.urls')),

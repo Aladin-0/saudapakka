@@ -46,7 +46,7 @@ class AdminPropertyViewSet(viewsets.ModelViewSet):
         property_obj = self.get_object()
         
         # Optional: Add a log entry here to track who deleted what
-        print(f"Admin {request.user.email} is deleting Property: {property_obj.title}")
+        # logger.info(f"Admin {request.user.email} is deleting Property: {property_obj.title}")
         
         property_obj.delete()
         return Response({"message": "Property permanently removed by Admin."}, status=status.HTTP_204_NO_CONTENT)
