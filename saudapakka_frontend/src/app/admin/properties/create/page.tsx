@@ -14,7 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import {
     MapPin, IndianRupee, FileText, Check, X, Upload, Sparkles,
     ArrowLeft, AlertCircle, Home, ChevronRight, CheckCircle, ArrowRight,
-    Shield, Star, TrendingUp, User
+    Shield, Star, TrendingUp, User, Building2, Store, Trees, Key, Tag, Map, Landmark
 } from "lucide-react";
 import Link from "next/link";
 // import { Metadata } from 'next'; // Can't export metadata from client component, skipping specific export but can add title logic if needed
@@ -38,14 +38,15 @@ const DOCUMENTS_CONFIG = [
     { key: "rera_project_certificate", label: "RERA Certificate", required: false },
     { key: "gst_registration", label: "G.S.T. Registration", required: false },
     { key: "sale_deed_registration_copy", label: "Sale Deed Copy", required: false },
+    { key: "electricity_bill", label: "Electricity Bill", required: false },
 ];
 
 const PROPERTY_TYPES = [
-    { value: "FLAT", label: "Flat", icon: "ðŸ¢" },
-    { value: "VILLA_BUNGALOW", label: "Villa/Bungalow", icon: "ðŸ¡" },
-    { value: "PLOT", label: "Plot", icon: "ðŸ“" },
-    { value: "LAND", label: "Land", icon: "ðŸŒ¾" },
-    { value: "COMMERCIAL_UNIT", label: "Commercial", icon: "ðŸª" }
+    { value: "FLAT", label: "Flat", icon: Building2 },
+    { value: "VILLA_BUNGALOW", label: "Villa/Bungalow", icon: Home },
+    { value: "PLOT", label: "Plot", icon: Map },
+    { value: "LAND", label: "Land", icon: Trees },
+    { value: "COMMERCIAL_UNIT", label: "Commercial", icon: Store }
 ];
 
 const SUBTYPE_OPTIONS: Record<string, { value: string; label: string }[]> = {
@@ -614,7 +615,7 @@ export default function AdminPropertyCreatePage() {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             {/* --- Enhanced Progress Header with Step Names --- */}
-            <div className="bg-white border-b sticky top-0 z-50 shadow-sm">
+            <div className="bg-white border-b sticky top-[76px] z-40 shadow-sm transition-all">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex items-center justify-between mb-3">
                         <Link href="/admin/properties" className="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
@@ -734,7 +735,9 @@ export default function AdminPropertyCreatePage() {
                                                 : "border-gray-200 hover:border-gray-300"
                                                 }`}
                                         >
-                                            <div className="text-4xl mb-2">ðŸ </div>
+                                            <div className="text-4xl mb-2 flex justify-center">
+                                                <Tag className="w-10 h-10" />
+                                            </div>
                                             <div className="font-bold text-gray-800">Sell</div>
                                         </button>
                                         <button
@@ -745,7 +748,9 @@ export default function AdminPropertyCreatePage() {
                                                 : "border-gray-200 hover:border-gray-300"
                                                 }`}
                                         >
-                                            <div className="text-4xl mb-2">ðŸ”‘</div>
+                                            <div className="text-4xl mb-2 flex justify-center">
+                                                <Key className="w-10 h-10" />
+                                            </div>
                                             <div className="font-bold text-gray-800">Rent</div>
                                         </button>
                                     </div>
@@ -763,7 +768,7 @@ export default function AdminPropertyCreatePage() {
                                                 : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
                                                 }`}
                                         >
-                                            <span className="text-3xl sm:text-4xl group-hover:scale-110 transition-transform filter drop-shadow-sm">{type.icon}</span>
+                                            <type.icon className="w-8 h-8 sm:w-10 sm:h-10 group-hover:scale-110 transition-transform" />
                                             <span className={`text-xs sm:text-sm font-bold tracking-tight text-center ${formData.property_type === type.value ? "text-green-800" : "text-gray-700"}`}>
                                                 {type.label}
                                             </span>
@@ -827,12 +832,13 @@ export default function AdminPropertyCreatePage() {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label className="font-bold text-sm">Total Price (â‚¹) <span className="text-red-500">*</span></Label>
+                                            <Label className="font-bold text-sm flex items-center gap-1">Total Price (<IndianRupee className="w-3 h-3 inline" />) <span className="text-red-500">*</span></Label>
                                             <Input
                                                 name="total_price"
                                                 type="number"
                                                 value={formData.total_price}
                                                 onChange={handleChange}
+                                                onWheel={(e: any) => e.currentTarget.blur()}
                                                 className="h-12 border-2 border-gray-200 rounded-xl focus:ring-green-500 font-bold text-lg"
                                                 placeholder="0"
                                             />
@@ -840,7 +846,7 @@ export default function AdminPropertyCreatePage() {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label className="font-bold text-sm">Price per Sq.ft (â‚¹) <span className="text-gray-400 text-xs font-normal ml-2">(Optional)</span></Label>
+                                            <Label className="font-bold text-sm flex items-center gap-1">Price per Sq.ft (<IndianRupee className="w-3 h-3 inline" />) <span className="text-gray-400 text-xs font-normal ml-2">(Optional)</span></Label>
                                             <div className="relative">
                                                 <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center bg-[#2D5F3F] border-r border-gray-300 rounded-l-xl text-white">
                                                     <IndianRupee className="w-4 h-4" />
@@ -850,6 +856,7 @@ export default function AdminPropertyCreatePage() {
                                                     type="number"
                                                     value={formData.price_per_sqft}
                                                     onChange={handleChange}
+                                                    onWheel={(e: any) => e.currentTarget.blur()}
                                                     placeholder="Enter price per sq.ft"
                                                     className="pl-14 h-12 border-2 border-gray-200 rounded-xl focus:ring-green-500 bg-white"
                                                 />
@@ -859,12 +866,13 @@ export default function AdminPropertyCreatePage() {
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                <Label className="font-bold text-sm">Maintenance (â‚¹)</Label>
+                                                <Label className="font-bold text-sm flex items-center gap-1">Maintenance (<IndianRupee className="w-3 h-3 inline" />)</Label>
                                                 <Input
                                                     name="maintenance_charges"
                                                     type="number"
                                                     value={formData.maintenance_charges}
                                                     onChange={handleChange}
+                                                    onWheel={(e: any) => e.currentTarget.blur()}
                                                     className="h-12 border-2 border-gray-200 rounded-xl focus:ring-green-500"
                                                 />
                                             </div>
@@ -900,6 +908,7 @@ export default function AdminPropertyCreatePage() {
                                                 type="number"
                                                 value={formData.super_builtup_area}
                                                 onChange={handleChange}
+                                                onWheel={(e: any) => e.currentTarget.blur()}
                                                 placeholder="Enter area in sq.ft"
                                                 className="h-12 border-2 border-gray-200 rounded-xl focus:ring-green-500"
                                             />
@@ -913,6 +922,7 @@ export default function AdminPropertyCreatePage() {
                                                 type="number"
                                                 value={formData.carpet_area}
                                                 onChange={handleChange}
+                                                onWheel={(e: any) => e.currentTarget.blur()}
                                                 placeholder="Enter carpet area in sq.ft"
                                                 className="h-12 border-2 border-gray-200 rounded-xl focus:ring-green-500"
                                             />
@@ -927,6 +937,7 @@ export default function AdminPropertyCreatePage() {
                                                     type="number"
                                                     value={formData.plot_area}
                                                     onChange={handleChange}
+                                                    onWheel={(e: any) => e.currentTarget.blur()}
                                                     className="h-12 border-2 border-gray-200 rounded-xl focus:ring-green-500"
                                                 />
                                             </div>
@@ -1154,6 +1165,7 @@ export default function AdminPropertyCreatePage() {
                                                 type="number"
                                                 value={formData.age_of_construction}
                                                 onChange={handleChange}
+                                                onWheel={(e: any) => e.currentTarget.blur()}
                                                 className="h-12 border-2 border-gray-200 rounded-xl focus:ring-green-500"
                                                 min="0"
                                             />
@@ -1683,14 +1695,14 @@ export default function AdminPropertyCreatePage() {
                                         <div className="flex justify-between p-3 bg-white rounded-lg">
                                             <span className="text-gray-600">Total Price:</span>
                                             <span className="font-bold text-green-700 text-base">
-                                                â‚¹ {formData.total_price ? Number(formData.total_price).toLocaleString('en-IN') : '-'}
+                                                <IndianRupee className="w-4 h-4 inline mr-1" /> {formData.total_price ? Number(formData.total_price).toLocaleString('en-IN') : '-'}
                                             </span>
                                         </div>
 
                                         {formData.price_per_sqft && (
                                             <div className="flex justify-between p-3 bg-white rounded-lg">
                                                 <span className="text-gray-600">Price per Sq.ft:</span>
-                                                <span className="font-bold">â‚¹ {Number(formData.price_per_sqft).toLocaleString('en-IN')}</span>
+                                                <span className="font-bold flex items-center"><IndianRupee className="w-4 h-4 mr-1" /> {Number(formData.price_per_sqft).toLocaleString('en-IN')}</span>
                                             </div>
                                         )}
 

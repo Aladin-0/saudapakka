@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { MapPin, Bed, Bath, Maximize, Heart, Share2, CheckCircle, Copy } from "lucide-react";
+import { MapPin, Bed, Bath, Maximize, Heart, Share2, CheckCircle, Copy, Eye } from "lucide-react";
 import api from "@/lib/axios";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -25,7 +25,9 @@ export interface Property {
   property_status?: string;
   is_hot_deal?: boolean;
   is_new?: boolean;
-  is_saved?: boolean; // In case backend provides it later
+  is_saved?: boolean;
+  views_count?: number;
+  owner?: string; // Owner ID
 }
 
 export default function PropertyCard({ property, onDelete, actionSlot }: { property: Property; onDelete?: (id: string) => void; actionSlot?: React.ReactNode }) {
@@ -58,6 +60,7 @@ export default function PropertyCard({ property, onDelete, actionSlot }: { prope
 
 
   const isVerified = property.verification_status === "VERIFIED";
+  const isOwner = user?.id === property.owner || user?.role === "ADMIN"; // Assuming role is available, or check is_staff
 
   // --- ACTIONS ---
 
@@ -133,22 +136,19 @@ export default function PropertyCard({ property, onDelete, actionSlot }: { prope
     >
       {/* Image Section */}
       <div className="relative overflow-hidden">
-        {/* We keep Link here for SEO, but onClick on parent handles click too. 
-            Clicking this inner Link might bubble or Navigate twice if not careful. 
-            Next.js Link usually handles onClick. To be safe, let's allow bubbling (router.push handles it) 
-            OR remove Link and rely on parent onClick. 
-            Removing Link wrapper here to avoid nesting issues since parent has onClick. */}
-        <img
-          src={mainImage}
-          alt={property.title}
-          className="h-52 w-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-        />
+        <Link href={`/property/${property.id}`} onClick={(e) => e.stopPropagation()} className="block">
+          <img
+            src={mainImage}
+            alt={property.title}
+            className="h-52 w-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+          />
+        </Link>
 
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
         {/* Top Left Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
+        <div className="absolute top-3 left-3 flex flex-col gap-2 pointer-events-none">
           {isVerified && (
             <div className="bg-white/95 backdrop-blur-sm text-[#2D5F3F] px-2.5 py-1.5 rounded-lg font-semibold text-xs flex items-center gap-1.5 shadow-sm">
               <CheckCircle className="w-3.5 h-3.5" />
@@ -168,17 +168,17 @@ export default function PropertyCard({ property, onDelete, actionSlot }: { prope
         </div>
 
         {/* Listing Type Badge - Top Right */}
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 right-3 pointer-events-none">
           <span className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide shadow-lg ${property.listing_type === "SALE"
             ? "bg-[#2D5F3F] text-white"
-            : "bg-amber-50 text-white"
+            : "bg-amber-500 text-white"
             }`}>
             For {property.listing_type === "SALE" ? "Sale" : "Rent"}
           </span>
         </div>
 
         {/* Action Buttons - Bottom Right (on hover) */}
-        <div className="absolute bottom-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+        <div className="absolute bottom-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-10">
           <button
             onClick={handleSave}
             disabled={loadingSave}
@@ -206,15 +206,26 @@ export default function PropertyCard({ property, onDelete, actionSlot }: { prope
           )}
         </div>
 
-        {/* Image count badge */}
-        {property.images && property.images.length > 1 && (
-          <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            {property.images.length}
-          </div>
-        )}
+        {/* Image count badge & View Count */}
+        <div className="absolute bottom-3 left-3 flex items-center gap-2 pointer-events-none">
+          {property.images && property.images.length > 1 && (
+            <div className="bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {property.images.length}
+            </div>
+          )}
+
+          {/* View Count - Visible if Owner or Admin */}
+          {(isOwner && property.views_count !== undefined) && (
+            <div className="bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5">
+              <Eye className="w-3.5 h-3.5" />
+              {property.views_count}
+            </div>
+          )}
+        </div>
+
       </div>
 
       {/* Content Section */}
@@ -224,6 +235,7 @@ export default function PropertyCard({ property, onDelete, actionSlot }: { prope
           <div>
             <h3 className="text-2xl font-black text-gray-900 tracking-tight">
               {formatPrice(Number(property.total_price))}
+              {property.listing_type === 'RENT' && <span className="text-sm font-normal text-gray-500 ml-1">/ month</span>}
             </h3>
             <span className="text-xs font-medium text-[#4A9B6D] bg-[#E8F5E9] px-2 py-0.5 rounded-md mt-1 inline-block">
               {property.property_type.replace("_", " ")}
@@ -232,9 +244,12 @@ export default function PropertyCard({ property, onDelete, actionSlot }: { prope
         </div>
 
         {/* Title */}
-        <h4 className="text-base font-bold text-gray-800 mb-2 line-clamp-1 hover:text-[#2D5F3F] transition-colors">
-          {property.title}
-        </h4>
+        <Link href={`/property/${property.id}`} onClick={(e) => e.stopPropagation()} className="block">
+          <h4 className="text-base font-bold text-gray-800 mb-2 line-clamp-1 hover:text-[#2D5F3F] transition-colors">
+            {property.title}
+          </h4>
+        </Link>
+
 
         {/* Location */}
         <p className="text-gray-500 mb-4 flex items-center text-sm">
@@ -269,9 +284,13 @@ export default function PropertyCard({ property, onDelete, actionSlot }: { prope
             {property.property_status === "READY" || !property.property_status ? "Ready to Move" : property.property_status}
           </span>
           {actionSlot && actionSlot}
-          <button className="flex-1 bg-gradient-to-r from-[#2D5F3F] to-[#4A9B6D] text-white py-2.5 rounded-xl hover:from-[#1B3A2C] hover:to-[#2D5F3F] transition-all duration-300 font-semibold text-sm shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+          <Link
+            href={`/property/${property.id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="flex-1 bg-gradient-to-r from-[#2D5F3F] to-[#4A9B6D] text-white py-2.5 rounded-xl hover:from-[#1B3A2C] hover:to-[#2D5F3F] transition-all duration-300 font-semibold text-sm shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-center flex items-center justify-center"
+          >
             View Details
-          </button>
+          </Link>
         </div>
       </div>
     </div>

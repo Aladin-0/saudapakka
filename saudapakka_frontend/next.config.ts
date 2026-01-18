@@ -11,6 +11,15 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : 'https://saudapakka.com'),
   },
 
+  async rewrites() {
+    return [
+      {
+        source: '/media/:path*',
+        destination: 'http://backend:8000/media/:path*',
+      },
+    ];
+  },
+
   images: {
     remotePatterns: [
       {

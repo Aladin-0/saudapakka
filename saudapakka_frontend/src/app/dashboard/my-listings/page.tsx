@@ -6,6 +6,7 @@ import Link from "next/link";
 import Cookies from "js-cookie";
 import api from "@/lib/axios";
 import { Plus, Home, Heart, Edit, Trash2, Eye, AlertCircle, Loader2 } from "lucide-react";
+import PropertyCard from "@/components/listings/property-card";
 
 export default function MyListingsPage() {
   const router = useRouter();
@@ -193,16 +194,24 @@ export default function MyListingsPage() {
             ) : (
               myListings.map(property => (
                 <div key={property.id} className="bg-white rounded-xl shadow-sm border p-4">
-                  <div className="aspect-video bg-gray-200 rounded-lg mb-4 overflow-hidden">
-                    {property.thumbnail_image || (property.images && property.images.length > 0 && property.images[0].image) ? (
-                      <img src={property.thumbnail_image || property.images[0].image} alt={property.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <Home className="w-12 h-12 text-gray-400" />
+                  <div className="aspect-video bg-gray-200 rounded-lg mb-4 overflow-hidden relative group">
+                    <Link href={`/property/${property.id}`} className="block h-full">
+                      <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white text-xs font-medium px-2.5 py-1 rounded-full flex items-center gap-1.5 z-10">
+                        <Eye className="w-3.5 h-3.5" />
+                        {property.views_count || 0} Views
                       </div>
-                    )}
+                      {property.thumbnail_image || (property.images && property.images.length > 0 && property.images[0].image) ? (
+                        <img src={property.thumbnail_image || property.images[0].image} alt={property.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <Home className="w-12 h-12 text-gray-400" />
+                        </div>
+                      )}
+                    </Link>
                   </div>
-                  <h3 className="font-bold text-lg mb-2 line-clamp-2">{property.title}</h3>
+                  <Link href={`/property/${property.id}`}>
+                    <h3 className="font-bold text-lg mb-2 line-clamp-2 hover:text-green-600 transition-colors">{property.title}</h3>
+                  </Link>
                   <p className="text-2xl font-bold text-green-600 mb-4">
                     {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(property.total_price))}
                   </p>
@@ -236,21 +245,10 @@ export default function MyListingsPage() {
               </div>
             ) : (
               savedListings.map(property => (
-                <div key={property.id} className="bg-white rounded-xl shadow-sm border p-4">
-                  <div className="aspect-video bg-gray-200 rounded-lg mb-4 overflow-hidden">
-                    {property.thumbnail_image || (property.images && property.images.length > 0 && property.images[0].image) ? (
-                      <img src={property.thumbnail_image || property.images[0].image} alt={property.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <Home className="w-12 h-12 text-gray-400" />
-                      </div>
-                    )}
-                  </div>
-                  <h3 className="font-bold text-lg mb-2 line-clamp-2">{property.title}</h3>
-                  <p className="text-2xl font-bold text-green-600 mb-4">
-                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(property.total_price))}
-                  </p>
-                </div>
+                <PropertyCard
+                  key={property.id}
+                  property={{ ...property, is_saved: true }}
+                />
               ))
             )}
           </div>

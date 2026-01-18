@@ -31,6 +31,10 @@ export interface Property {
     description?: string;
     availability_status?: string;
     is_saved?: boolean;
+    owner_details?: {
+        full_name: string;
+        profile_picture?: string;
+    };
 }
 
 export default function PropertyCardHorizontal({ property }: { property: Property }) {
@@ -213,12 +217,22 @@ export default function PropertyCardHorizontal({ property }: { property: Propert
                     <div className="mt-auto flex items-center justify-between pt-3 border-t border-gray-50">
                         {/* Owner Info */}
                         <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 bg-[#2D5F3F] rounded-full flex items-center justify-center text-white font-bold text-xs">
-                                O
-                            </div>
+                            {property.owner_details?.profile_picture ? (
+                                <img
+                                    src={property.owner_details.profile_picture}
+                                    alt={property.owner_details.full_name}
+                                    className="w-7 h-7 rounded-full object-cover border border-gray-100"
+                                />
+                            ) : (
+                                <div className="w-7 h-7 bg-[#2D5F3F] rounded-full flex items-center justify-center text-white font-bold text-xs">
+                                    {property.owner_details?.full_name?.[0] || "O"}
+                                </div>
+                            )}
                             <div>
                                 <p className="text-[10px] text-gray-400">{getTimeAgo(property.created_at)}</p>
-                                <p className="text-xs font-semibold text-gray-700">Owner</p>
+                                <p className="text-xs font-semibold text-gray-700">
+                                    {property.owner_details?.full_name || "Owner"}
+                                </p>
                             </div>
                         </div>
 

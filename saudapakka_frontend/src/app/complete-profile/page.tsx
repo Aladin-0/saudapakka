@@ -120,7 +120,7 @@ export default function CompleteProfilePage() {
 
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-primary-green to-accent-green text-white rounded-2xl mb-4 shadow-lg">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-primary-green to-[#4A9B6D] text-white rounded-2xl mb-4 shadow-lg">
               <Sparkles className="w-7 h-7" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">
@@ -259,7 +259,7 @@ export default function CompleteProfilePage() {
             <Button
               onClick={handleUpdate}
               disabled={loading}
-              className="w-full h-13 mt-6 bg-gradient-to-r from-primary-green to-accent-green hover:from-accent-green hover:to-primary-green text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+              className="w-full h-13 mt-6 bg-gradient-to-r from-primary-green to-[#4A9B6D] hover:from-[#4A9B6D] hover:to-primary-green text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                 <span className="flex items-center gap-2">

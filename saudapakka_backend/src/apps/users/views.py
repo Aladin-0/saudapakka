@@ -76,6 +76,8 @@ class SendOtpView(APIView):
             logger.error(f"Email Error: {e}")
             return Response({'error': 'Failed to send email'}, status=500)
 
+from django.contrib.auth.models import update_last_login
+
 class VerifyOtpView(APIView):
     """Verifies OTP and returns JWT tokens + User details."""
     permission_classes = [AllowAny]
@@ -90,6 +92,9 @@ class VerifyOtpView(APIView):
             if user.otp == otp and (timezone.now() - user.otp_created_at).total_seconds() < 300:
                 user.otp = None # Clear OTP after success
                 user.save()
+                
+                # Update last_login timestamp
+                update_last_login(None, user)
                 
                 refresh = RefreshToken.for_user(user)
                 return Response({
@@ -218,6 +223,105 @@ class VerifyKYCStatusView(APIView):
         status_code = 202 if result.get('code') in [202, 429] else 400
         return Response({"status": "PROCESSING"}, status=status_code)
 
+class UploadAadhaarView(APIView):
+    """
+    NEW: Upload Aadhaar card photos (front and back) for KYC verification.
+    Automatically verifies the user upon successful upload.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        aadhaar_front = request.FILES.get('aadhaar_front')
+        aadhaar_back = request.FILES.get('aadhaar_back')
+        selfie = request.FILES.get('selfie')
+        
+        # Validation
+        if not aadhaar_front or not aadhaar_back or not selfie:
+            return Response({
+                "error": "Aadhaar front, back, and selfie images are all required"
+            }, status=400)
+        
+        # Validate file types
+        allowed_types = ['image/jpeg', 'image/jpg', 'image/png']
+        if (aadhaar_front.content_type not in allowed_types or 
+            aadhaar_back.content_type not in allowed_types or
+            selfie.content_type not in allowed_types):
+            return Response({
+                "error": "Invalid file format. Please upload JPG or PNG images only."
+            }, status=400)
+        
+        # Validate file sizes (5MB max)
+        max_size = 5 * 1024 * 1024  # 5MB
+        if aadhaar_front.size > max_size or aadhaar_back.size > max_size or selfie.size > max_size:
+            return Response({
+                "error": "File size exceeds 5MB limit. Please upload smaller images."
+            }, status=400)
+        
+        try:
+            # Create or update KYC record
+            kyc_verification, created = KYCVerification.objects.update_or_create(
+                user=request.user,
+                defaults={
+                    'aadhaar_front_image': aadhaar_front,
+                    'aadhaar_back_image': aadhaar_back,
+                    'selfie_image': selfie,
+                }
+            )
+            
+            # 4. Save requested role if provided
+            requested_role = request.data.get('requested_role')
+            if requested_role:
+                kyc_verification.requested_role = requested_role
+
+            # 5. AUTO-VERIFICATION & ACCOUNT UPGRADE
+            kyc_verification.status = 'VERIFIED'
+            kyc_verification.verified_at = timezone.now()
+            kyc_verification.verified_by = 'AUTO_UPLOAD'
+            kyc_verification.save()
+
+            # Upgrade User Role
+            user = request.user
+            user.is_kyc_verified = True
+            user.profile_picture = selfie # Set selfie as profile picture
+            
+            if requested_role:
+                user.role_category = requested_role
+                if requested_role == 'SELLER':
+                    user.is_active_seller = True
+                    user.is_active_broker = False # Ensure only one active role
+                elif requested_role == 'BROKER':
+                    user.is_active_broker = True
+                    user.is_active_seller = False # Ensure only one active role
+                elif requested_role == 'BUILDER':
+                    user.role_category = 'BUILDER'
+                    user.is_active_seller = True # builders act as sellers
+                    user.is_active_broker = False 
+                elif requested_role == 'PLOTTING_AGENCY':
+                    user.role_category = 'PLOTTING_AGENCY'
+                    user.is_active_seller = True # agencies act as sellers
+                    user.is_active_broker = False 
+            
+            user.save()
+
+            logger.info(f"Aadhaar KYC verification successful for {user.email}. Role: {requested_role if requested_role else 'N/A'}")
+
+            return Response({
+                "status": "SUCCESS",
+                "message": f"KYC Verified Successfully! Account upgraded to {requested_role if requested_role else 'Verified'} status.",
+                "data": {
+                    "is_verified": True,
+                    "verified_at": kyc_verification.verified_at,
+                    "verification_method": "AADHAAR_UPLOAD",
+                    "kyc_status": kyc_verification.status
+                }
+            }, status=200)
+            
+        except Exception as e:
+            logger.error(f"Aadhaar upload error for {request.user.email}: {str(e)}")
+            return Response({
+                "error": "Failed to process Aadhaar upload. Please try again."
+            }, status=500)
+
 # --- 4. ROLE UPGRADES ---
 
 class UpgradeRoleView(APIView):
@@ -305,16 +409,29 @@ class AdminUserDocumentView(APIView):
             target_user = User.objects.get(id=user_id)
             try:
                 kyc = KYCVerification.objects.get(user=target_user)
+                
+                # Build document response with Aadhaar images if available
+                documents = {
+                    "name": kyc.full_name,
+                    "dob": kyc.dob,
+                    "address": kyc.address_json,
+                    "verified_at": kyc.verified_at,
+                    "verification_method": kyc.verified_by
+                }
+                
+                # Add Aadhaar image URLs if they exist
+                if kyc.aadhaar_front_image:
+                    documents["aadhaar_front_url"] = request.build_absolute_uri(kyc.aadhaar_front_image.url)
+                if kyc.aadhaar_back_image:
+                    documents["aadhaar_back_url"] = request.build_absolute_uri(kyc.aadhaar_back_image.url)
+                if kyc.selfie_image:
+                    documents["selfie_url"] = request.build_absolute_uri(kyc.selfie_image.url)
+                
                 return Response({
                     "user_id": target_user.id,
                     "full_name": target_user.full_name,
                     "kyc_status": kyc.status,
-                    "documents": {
-                        "name": kyc.full_name,
-                        "dob": kyc.dob,
-                        "address": kyc.address_json,
-                        "verified_at": kyc.verified_at
-                    }
+                    "documents": documents
                 })
             except KYCVerification.DoesNotExist:
                 return Response({

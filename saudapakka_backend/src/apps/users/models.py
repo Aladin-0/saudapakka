@@ -18,6 +18,9 @@ class User(AbstractUser):
     # KYC Status (cached for performance - updated when KYC is verified)
     is_kyc_verified = models.BooleanField(default=False)
     
+    # Profile Picture (set from KYC selfie)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
+    
     ROLE_CHOICES = [
         ('BUYER', 'Buyer'),
         ('SELLER', 'Seller'),
@@ -47,12 +50,36 @@ class User(AbstractUser):
         return f"{self.full_name} ({self.email})"
 
 class KYCVerification(models.Model):
-    """Stores verified identity data from Real Sandbox API."""
+    """Stores verified identity data from Real Sandbox API or Aadhaar Upload."""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='kyc_data')
+    
+    # DigiLocker fields (kept for backward compatibility)
     request_id = models.CharField(max_length=100, blank=True, null=True) # entity_id from Sandbox
     full_name = models.CharField(max_length=255, blank=True, null=True)
     dob = models.CharField(max_length=20, blank=True, null=True)
     address_json = models.JSONField(null=True, blank=True)
+    
+    # Aadhaar Upload fields (NEW)
+    aadhaar_front_image = models.ImageField(upload_to='kyc/aadhaar/', blank=True, null=True)
+    aadhaar_back_image = models.ImageField(upload_to='kyc/aadhaar/', blank=True, null=True)
+    selfie_image = models.ImageField(upload_to='kyc/selfies/', blank=True, null=True)
+
+    # User's requested role for upgrade
+    ROLE_CHOICES = [
+        ('SELLER', 'Seller'),
+        ('BUILDER', 'Builder'),
+        ('BROKER', 'Real Estate Agent (Broker)'),
+        ('PLOTTING_AGENCY', 'Plotting Company/Agency'),
+    ]
+    requested_role = models.CharField(max_length=20, choices=ROLE_CHOICES, blank=True, null=True)
+    
+    # Verification tracking
+    VERIFICATION_METHOD_CHOICES = [
+        ('DIGILOCKER', 'DigiLocker'),
+        ('AADHAAR_UPLOAD', 'Aadhaar Upload'),
+        ('ADMIN', 'Admin Manual Verification')
+    ]
+    verified_by = models.CharField(max_length=20, choices=VERIFICATION_METHOD_CHOICES, blank=True, null=True)
     
     status = models.CharField(max_length=20, choices=[
         ('INITIATED', 'Initiated'),

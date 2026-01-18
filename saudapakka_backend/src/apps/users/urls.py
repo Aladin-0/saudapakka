@@ -3,7 +3,7 @@ from .views import (
     SendOtpView, VerifyOtpView, InitiateKYCView, 
     VerifyKYCStatusView, UpgradeRoleView, SearchProfileView, 
     AdminDashboardStats, UserProfileView, KYCCallbackView,
-    AdminUserDocumentView, AdminVerifyUserView
+    AdminUserDocumentView, AdminVerifyUserView, UploadAadhaarView
 )
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -18,6 +18,7 @@ urlpatterns = [
     path('kyc/initiate/', InitiateKYCView.as_view(), name='kyc-initiate'),
     path('kyc/callback/', KYCCallbackView.as_view(), name='kyc-callback'),
     path('kyc/verify-status/', VerifyKYCStatusView.as_view(), name='kyc-verify-status'),
+    path('kyc/upload-aadhaar/', UploadAadhaarView.as_view(), name='kyc-upload-aadhaar'),
     
     # Admin Routes
     path('admin/users/<uuid:user_id>/documents/', AdminUserDocumentView.as_view(), name='admin-user-docs'),

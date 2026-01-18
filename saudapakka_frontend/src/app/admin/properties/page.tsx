@@ -23,7 +23,7 @@ type Property = {
     city: string;
     total_price: number;
     verification_status: string;
-    owner: {
+    owner_details: {
         full_name: string;
         email: string;
     };
@@ -53,7 +53,7 @@ export default function AdminPropertiesPage() {
             setLoading(true);
             // If filter is ALL, fetch all, otherwise filter by status
             const url = filter === 'ALL'
-                ? '/api/admin/properties/'
+                ? '/api/admin/properties/?status=ALL'
                 : `/api/admin/properties/?status=${filter}`;
 
             const res = await api.get(url);
@@ -88,7 +88,7 @@ export default function AdminPropertiesPage() {
     const filteredProps = properties.filter(p =>
         p.title.toLowerCase().includes(search.toLowerCase()) ||
         p.project_name?.toLowerCase().includes(search.toLowerCase()) ||
-        p.owner?.email.toLowerCase().includes(search.toLowerCase())
+        p.owner_details?.email.toLowerCase().includes(search.toLowerCase())
     );
 
     if (!user?.is_staff) {
@@ -188,8 +188,8 @@ export default function AdminPropertiesPage() {
                                             <div className="text-xs text-gray-500">{p.city}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900">{p.owner?.full_name || "Unknown"}</div>
-                                            <div className="text-xs text-gray-500">{p.owner?.email}</div>
+                                            <div className="text-sm text-gray-900">{p.owner_details?.full_name || "Unknown"}</div>
+                                            <div className="text-xs text-gray-500">{p.owner_details?.email}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${p.verification_status === 'VERIFIED' ? 'bg-green-50 text-green-700 border-green-200' :

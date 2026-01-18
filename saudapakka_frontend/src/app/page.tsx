@@ -307,10 +307,10 @@ export default function HomePage() {
 
           {/* CTA Section - Responsive */}
           <div className="mt-10 sm:mt-12 md:mt-16 text-center">
-            <button className="bg-gradient-to-r from-[#2D5F3F] to-[#4A9B6D] text-white px-8 sm:px-10 py-3 sm:py-4 rounded-full font-semibold text-sm sm:text-base hover:shadow-2xl inline-flex items-center gap-2 sm:gap-3 transition-all hover:-translate-y-1">
-              <span>Explore All Features</span>
+            <Link href="/search" className="bg-gradient-to-r from-[#2D5F3F] to-[#4A9B6D] text-white px-8 sm:px-10 py-3 sm:py-4 rounded-full font-semibold text-sm sm:text-base hover:shadow-2xl inline-flex items-center gap-2 sm:gap-3 transition-all hover:-translate-y-1">
+              <span>Explore other properties</span>
               <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
+            </Link>
           </div>
         </div>
       </section>

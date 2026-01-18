@@ -61,25 +61,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [authReady, user, router]);
 
   const getUserRole = () => {
-    if (user?.is_staff) return { label: "Administrator", color: "bg-red-600" };
+    if (user?.is_staff) return { label: "Administrator", className: "bg-red-600 text-white" };
 
     // Explicit Role Checks (Forces correct label even if is_active_seller is true)
-    if (user?.role_category === 'BUILDER') return { label: "Builder", color: "bg-orange-500" }; // Using distinct Orange for Builder
-    if (user?.role_category === 'PLOTTING_AGENCY') return { label: "Plotting Agency", color: "bg-indigo-500" }; // Distinct Indigo
+    if (user?.role_category === 'BUILDER') return { label: "Builder", className: "bg-orange-500 text-white" }; // Using distinct Orange for Builder
+    if (user?.role_category === 'PLOTTING_AGENCY') return { label: "Plotting Agency", className: "bg-indigo-500 text-white" }; // Distinct Indigo
 
     // Prioritize specific category if available
     if (user?.role_category) {
-      if (user.role_category === 'BROKER') return { label: "Real Estate Agent", color: "bg-blue-500" };
+      if (user.role_category === 'BROKER') return { label: "Real Estate Agent", className: "bg-blue-500 text-white" };
 
       // Use existing colors based on underlying role
-      const color = user.is_active_broker ? "bg-blue-500" :
-        user.is_active_seller ? "bg-purple-500" : "bg-accent-green";
-      return { label: user.role_category.replace('_', ' '), color };
+      const className = user.is_active_broker ? "bg-blue-500 text-white" :
+        user.is_active_seller ? "bg-purple-500 text-white" : "bg-accent-green text-primary-green";
+      return { label: user.role_category.replace('_', ' '), className };
     }
 
-    if (user?.is_active_broker) return { label: "Real Estate Agent", color: "bg-blue-500" };
-    if (user?.is_active_seller) return { label: "Seller", color: "bg-purple-500" };
-    return { label: "Consumer", color: "bg-accent-green" };
+    if (user?.is_active_broker) return { label: "Real Estate Agent", className: "bg-blue-500 text-white" };
+    if (user?.is_active_seller) return { label: "Seller", className: "bg-purple-500 text-white" };
+    return { label: "Consumer", className: "bg-accent-green text-primary-green" };
   };
 
   const handleLogout = () => {
@@ -207,15 +207,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* User Profile Section */}
         <div className="pt-6 border-t border-white/10">
           <div className="flex items-center gap-3 mb-4 px-2">
-            <div className="w-10 h-10 rounded-full bg-accent-green flex items-center justify-center text-dark-green font-bold text-lg shadow-lg">
-              {user?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
-            </div>
+            {user?.profile_picture ? (
+              <img
+                src={user.profile_picture}
+                alt={user?.full_name || "User"}
+                className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-lg"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-accent-green flex items-center justify-center text-dark-green font-bold text-lg shadow-lg">
+                {user?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold text-white truncate">
                 {user?.full_name || user?.email?.split('@')[0] || "User"}
               </div>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${userRole.color} text-white uppercase tracking-wide`}>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${userRole.className} uppercase tracking-wide`}>
                   {userRole.label}
                 </span>
                 {user?.kyc_verified && (
@@ -255,7 +263,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           <div className="flex items-center gap-3">
             <NotificationBell />
-            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${userRole.color} text-white uppercase tracking-wide`}>
+            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${userRole.className} uppercase tracking-wide`}>
               {userRole.label}
             </span>
             <button
@@ -274,7 +282,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <NotificationBell />
             <div className="h-8 w-[1px] bg-gray-200"></div>
             <div className="flex items-center gap-2">
-              <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${userRole.color} text-white uppercase tracking-wide`}>
+              <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${userRole.className} uppercase tracking-wide`}>
                 {userRole.label}
               </span>
             </div>

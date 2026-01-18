@@ -13,15 +13,18 @@ interface User {
   is_active_seller: boolean;
   is_active_broker: boolean;
   is_staff: boolean;
+  is_kyc_verified?: boolean;
   kyc_verified?: boolean;
   kyc_status?: string;
   role_category?: string;
+  role?: string; // Sometimes used for ADMIN check
   is_superuser?: boolean;
   broker_profile?: {
     services_offered: string[];
     experience_years: number;
     is_verified: boolean;
   };
+  profile_picture?: string;
 }
 
 interface AuthState {
@@ -55,7 +58,7 @@ export const useAuth = create<AuthState>()(
           // Only update if data actually changed to prevent re-renders
           if (JSON.stringify(currentUser) !== JSON.stringify(res.data)) {
             set({ user: res.data });
-}
+          }
         } catch (error: any) {
           console.error("Failed to refresh user data", error);
           if (error.response?.status === 401) {

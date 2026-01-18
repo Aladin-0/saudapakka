@@ -55,7 +55,7 @@ export default function KYCVerificationModal({ isOpen, onClose }: KYCVerificatio
                         </h2>
                         <p className="text-gray-600 leading-relaxed">
                             You need to complete KYC verification to list properties or manage mandates.
-                            Please verify your identity or contact our support team for assistance.
+                            Please upload your Aadhaar card photos to verify your identity.
                         </p>
                     </div>
 

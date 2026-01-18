@@ -117,7 +117,7 @@ export default function LoginPage() {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-dark-green mb-2 tracking-tight">
-              Sauda<span className="text-accent-green">pakka</span>
+              Sauda<span className="text-primary-green">pakka</span>
             </h1>
             <p className="text-gray-500 text-sm">
               {step === "EMAIL" ? "Sign in to manage your property portfolio" : `Enter the 6-digit code sent to ${email}`}
@@ -147,7 +147,7 @@ export default function LoginPage() {
                 <Button
                   onClick={handleSendOtp}
                   disabled={loading}
-                  className="w-full h-12 bg-gradient-to-r from-primary-green to-accent-green hover:to-primary-green text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.98] transition-all duration-200"
+                  className="w-full h-12 bg-gradient-to-r from-primary-green to-[#4A9B6D] hover:to-primary-green text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.98] transition-all duration-200"
                 >
                   {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Continue with Email"}
                 </Button>

@@ -9,4 +9,5 @@ export interface User {
     is_active_broker?: boolean;
     is_staff?: boolean;
     is_superuser?: boolean;
+    profile_picture?: string;
 }

@@ -134,7 +134,7 @@ function BuyerDashboard({ user }: { user: any }) {
   return (
     <div className="space-y-8">
       {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-primary-green to-accent-green rounded-3xl p-8 text-white relative overflow-hidden shadow-xl">
+      <div className="bg-gradient-to-r from-primary-green to-[#4A9B6D] rounded-3xl p-8 text-white relative overflow-hidden shadow-xl">
         <div className="relative z-10 max-w-xl">
           <h2 className="text-3xl font-bold mb-4">Find your dream home today</h2>
           <p className="text-white/90 mb-8 text-lg">

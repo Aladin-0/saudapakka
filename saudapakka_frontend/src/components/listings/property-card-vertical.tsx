@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, Heart } from "lucide-react";
+import { MapPin, Heart, Eye } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -31,6 +31,8 @@ export interface Property {
     description?: string;
     availability_status?: string;
     is_saved?: boolean;
+    views_count?: number;
+    owner?: string;
 }
 
 export default function PropertyCardVertical({ property }: { property: Property }) {
@@ -38,6 +40,8 @@ export default function PropertyCardVertical({ property }: { property: Property 
     const { user } = useAuth();
     const [isSaved, setIsSaved] = useState(property.is_saved || false);
     const [loadingSave, setLoadingSave] = useState(false);
+
+    const isOwner = user?.id === property.owner || user?.role === "ADMIN";
 
     const placeholder = "https://placehold.co/600x400/f3f4f6/9ca3af?text=No+Image";
 
@@ -107,6 +111,23 @@ export default function PropertyCardVertical({ property }: { property: Property 
                     >
                         <Heart className={`w-4 h-4 ${isSaved ? "fill-red-500 text-red-500" : ""}`} />
                     </button>
+
+                    {/* Listing Type Badge */}
+                    <div className="absolute top-4 left-4 z-10">
+                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide shadow-sm ${property.listing_type === "SALE"
+                            ? "bg-[#2D5F3F] text-white"
+                            : "bg-amber-500 text-white"
+                            }`}>
+                            For {property.listing_type === "SALE" ? "Sale" : "Rent"}
+                        </span>
+
+                        {(isOwner && property.views_count !== undefined) && (
+                            <span className="ml-2 bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide shadow-sm flex items-center gap-1">
+                                <Eye className="w-3 h-3" />
+                                {property.views_count}
+                            </span>
+                        )}
+                    </div>
 
                     {/* Main Image - Left (larger) */}
                     <div className="flex-[2] rounded-xl overflow-hidden bg-gray-100">

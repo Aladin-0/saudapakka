@@ -32,7 +32,7 @@ export default function Navbar() {
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
             <Link
-              href="/search?type=BUY"
+              href="/search?type=SALE"
               className="text-gray-700 hover:text-[#2D5F3F] transition-colors font-medium text-sm lg:text-base"
             >
               Buy
@@ -47,7 +47,14 @@ export default function Navbar() {
 
             {user ? (
               <Link href={user.is_staff || user.is_superuser ? "/admin" : "/dashboard/overview"}>
-                <Button className="bg-[#2D5F3F] hover:bg-[#1B3A2C] text-white px-6 py-2.5 rounded-lg font-medium shadow-sm border-none transition-all">
+                <Button className="bg-[#2D5F3F] hover:bg-[#1B3A2C] text-white pl-2 pr-6 py-2 rounded-full font-medium shadow-sm border-none transition-all flex items-center gap-2">
+                  {user.profile_picture ? (
+                    <img src={user.profile_picture} alt="Profile" className="w-8 h-8 rounded-full object-cover border-2 border-white/20" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold border-2 border-white/20">
+                      {user.full_name?.[0] || "U"}
+                    </div>
+                  )}
                   {user.is_staff || user.is_superuser ? "Admin Panel" : "Dashboard"}
                 </Button>
               </Link>
@@ -109,7 +116,14 @@ export default function Navbar() {
           <div className="pt-3 border-t border-gray-100">
             {user ? (
               <Link href={user.is_staff || user.is_superuser ? "/admin" : "/dashboard/overview"} onClick={closeMobileMenu}>
-                <Button className="w-full bg-[#2D5F3F] hover:bg-[#1B3A2C] text-white py-3 rounded-lg font-semibold shadow-md border-none transition-all">
+                <Button className="w-full bg-[#2D5F3F] hover:bg-[#1B3A2C] text-white py-3 rounded-lg font-semibold shadow-md border-none transition-all flex items-center justify-center gap-2">
+                  {user.profile_picture ? (
+                    <img src={user.profile_picture} alt="Profile" className="w-6 h-6 rounded-full object-cover border border-white/30" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-bold">
+                      {user.full_name?.[0] || "U"}
+                    </div>
+                  )}
                   {user.is_staff || user.is_superuser ? "Go to Admin Panel" : "Go to Dashboard"}
                 </Button>
               </Link>

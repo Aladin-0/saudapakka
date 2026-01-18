@@ -21,6 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField()
     kyc_status = serializers.SerializerMethodField()
     broker_profile = BrokerProfileSerializer(read_only=True)
+    profile_picture = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = User
@@ -37,7 +38,8 @@ class UserSerializer(serializers.ModelSerializer):
             'kyc_status',
             'is_kyc_verified',
             'is_staff',
-            'broker_profile'
+            'broker_profile',
+            'profile_picture'
         ]
         read_only_fields = ['id', 'email', 'full_name', 'kyc_status', 'is_kyc_verified', 'is_staff', 'broker_profile']
 
@@ -87,6 +89,7 @@ class PublicUserSerializer(serializers.ModelSerializer):
     Excludes sensitive contact info like phone_number and email.
     """
     full_name = serializers.ReadOnlyField()
+    profile_picture = serializers.SerializerMethodField()
     
     class Meta:
         model = User
@@ -96,8 +99,18 @@ class PublicUserSerializer(serializers.ModelSerializer):
             'last_name', 
             'full_name', 
             'is_active_seller', 
-            'is_active_broker'
+            'is_active_broker',
+            'profile_picture'
         ]
+
+    def get_profile_picture(self, obj):
+        """Return absolute URL for profile picture"""
+        if obj.profile_picture:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.profile_picture.url)
+            return obj.profile_picture.url
+        return None
 
 
 class KYCVerificationSerializer(serializers.ModelSerializer):

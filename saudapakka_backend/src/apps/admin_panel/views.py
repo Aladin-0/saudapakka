@@ -90,6 +90,8 @@ class AdminPropertyList(generics.ListAPIView):
 
     def get_queryset(self):
         status_param = self.request.query_params.get('status', 'PENDING')
+        if status_param == 'ALL':
+            return Property.objects.all().order_by('-created_at')
         return Property.objects.filter(verification_status=status_param).order_by('-created_at')
 
 class AdminPropertyAction(APIView):
@@ -175,16 +177,31 @@ class AdminUserAction(APIView):
             return Response({"message": "User unblocked"})
             
         elif action == 'UPDATE_ROLE':
-            is_broker = request.data.get('is_active_broker')
-            is_seller = request.data.get('is_active_seller')
+            new_role = request.data.get('role_category')
             
-            if is_broker is not None:
-                user.is_active_broker = bool(is_broker)
-            if is_seller is not None:
-                user.is_active_seller = bool(is_seller)
-                
+            if not new_role:
+                return Response({"error": "role_category is required"}, status=400)
+            
+            # Validate role
+            valid_roles = ['BUYER', 'SELLER', 'BROKER', 'BUILDER', 'PLOTTING_AGENCY']
+            if new_role not in valid_roles:
+                return Response({"error": f"Invalid role. Must be one of: {', '.join(valid_roles)}"}, status=400)
+            
+            # Update role_category
+            user.role_category = new_role
+            
+            # Update legacy flags based on role
+            # Sellers, Builders, and Plotting Agencies can all list properties
+            user.is_active_seller = (new_role in ['SELLER', 'BUILDER', 'PLOTTING_AGENCY'])
+            user.is_active_broker = (new_role == 'BROKER')
+            
             user.save()
-            return Response({"message": "User roles updated successfully"})
+            return Response({
+                "message": f"User role updated to {new_role} successfully",
+                "role_category": user.role_category,
+                "is_active_seller": user.is_active_seller,
+                "is_active_broker": user.is_active_broker
+            })
             
         return Response({"error": "Invalid action"}, status=400)
 
@@ -193,8 +210,8 @@ class AdminUserDetail(generics.RetrieveDestroyAPIView):
     Get or Delete a user.
     """
     permission_classes = [permissions.IsAdminUser]
-    from apps.users.serializers import UserSerializer
-    serializer_class = UserSerializer
+    from .serializers import AdminUserDetailSerializer
+    serializer_class = AdminUserDetailSerializer
     queryset = User.objects.all()
 
     def perform_destroy(self, instance):

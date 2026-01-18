@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -13,9 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Notification } from "@/components/ui/notification";
 import {
   MapPin, Phone, Bed, Bath, Ruler, Building, Shield, Zap,
-  Wifi, Droplet, Trees, Users, MessageCircle, Heart,
+  Wifi, Droplet, Trees, Users, MessageCircle, Heart, Eye,
   ArrowLeft, CheckCircle, Clock, Layers, Compass, Sofa,
-  Maximize, PlayCircle, FileText, ChevronLeft, ChevronRight, X, Loader2, Navigation, Share2, ExternalLink
+  Maximize, PlayCircle, FileText, ChevronLeft, ChevronRight, X, Loader2, Navigation, Share2, ExternalLink, Gavel
 } from "lucide-react";
 
 // --- Types (Synced with Django Model) ---
@@ -76,6 +76,7 @@ interface PropertyDetail {
 
   // Media & Docs
   images: { id: number; image: string }[];
+  floor_plans?: { id: number; image: string; floor_number?: string; floor_name?: string; order: number }[];
   video_url?: string;
 
   // Verification Docs
@@ -89,7 +90,7 @@ interface PropertyDetail {
   sale_deed?: string;
 
   // Meta
-  owner_details?: { full_name: string; id: string };
+  owner_details?: { full_name: string; id: string; profile_picture?: string };
   listed_by_display?: string;
   verification_status: string;
   whatsapp_number?: string; // Direct property contact
@@ -97,6 +98,7 @@ interface PropertyDetail {
   // User Interaction
   is_saved?: boolean;
   has_active_mandate?: boolean;
+  views_count?: number;
 }
 
 // --- Dynamic Imports ---
@@ -261,8 +263,20 @@ export default function PropertyDetailsPage() {
   const [notification, setNotification] = useState({ show: false, message: "", type: "info" as "info" | "success" | "error" });
   const showNotify = (message: string, type: "info" | "success" | "error" = "info") => setNotification({ show: true, message, type });
 
+
+  const viewRecorded = useRef(false);
+
   useEffect(() => {
-    if (id) fetchPropertyDetails();
+    if (id) {
+      fetchPropertyDetails();
+
+      // Record view in background (only once)
+      if (!viewRecorded.current) {
+        api.get(`/api/properties/${id}/record_view/`)
+          .catch(err => console.error("View record failed", err));
+        viewRecorded.current = true;
+      }
+    }
   }, [id]);
 
   const fetchPropertyDetails = async () => {
@@ -425,6 +439,37 @@ export default function PropertyDetailsPage() {
                 )}
               </div>
 
+              {/* Floor Plans Section */}
+              {property.floor_plans && property.floor_plans.length > 0 && (
+                <div className="bg-white rounded-2xl overflow-hidden shadow-sm mb-6 border border-gray-100">
+                  <div className="p-6">
+                    <h3 className="text-lg font-bold mb-4 text-gray-900 flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-[#4A9B6D]" />
+                      Floor Plans
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {property.floor_plans.map((plan) => (
+                        <div key={plan.id} className="group relative">
+                          <div className="aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden border border-gray-200 hover:border-[#4A9B6D] transition-colors cursor-pointer"
+                            onClick={() => { setActiveImage(plan.image); setShowImageModal(true); }}>
+                            <img
+                              src={plan.image}
+                              alt={plan.floor_name || `Floor ${plan.floor_number || ''}`}
+                              className="w-full h-full object-contain hover:scale-105 transition-transform"
+                            />
+                          </div>
+                          {(plan.floor_name || plan.floor_number) && (
+                            <div className="mt-2 text-sm font-medium text-gray-700 text-center">
+                              {plan.floor_name || `Floor ${plan.floor_number}`}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* 2. Header Info */}
               <div className="mb-6">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
@@ -560,13 +605,50 @@ export default function PropertyDetailsPage() {
                       <Heart className={`w-5 h-5 mr-2 ${isSaved ? "fill-current" : ""}`} />
                       {isSaved ? "Property Saved" : "Save Property"}
                     </Button>
+
+                    {/* Mandate Button & Status (Broker Only) */}
+                    {user?.is_active_broker && (
+                      <>
+                        {property.has_active_mandate ? (
+                          <div className="w-full p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+                            <div className="flex items-center gap-2 text-blue-700">
+                              <Gavel className="w-5 h-5" />
+                              <span className="font-semibold">Mandate Active</span>
+                            </div>
+
+                          </div>
+                        ) : (
+                          <Button
+                            onClick={() => router.push(`/dashboard/mandates/create?property=${property.id}`)}
+                            className="w-full h-12 text-lg font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all"
+                          >
+                            <Gavel className="w-5 h-5 mr-2" />
+                            Request Mandate
+                          </Button>
+                        )}
+                      </>
+                    )}
+
+                    {/* View Count (Owner Only) */}
+                    {((user?.id === property.owner_details?.id) || user?.role === 'ADMIN') && property.views_count !== undefined && (
+                      <div className="flex items-center justify-center p-3 bg-gray-50 rounded-xl border border-gray-100 text-gray-600 font-medium">
+                        <div className="flex items-center gap-2">
+                          <Eye className="w-5 h-5 text-gray-900" />
+                          <span>{property.views_count} Views</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Owner Brief */}
                   <div className="mt-6 pt-6 border-t border-gray-100 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#E8F5E9] border border-green-100 flex items-center justify-center font-bold text-xl text-[#2D5F3F]">
-                      {property.owner_details?.full_name?.[0] || "U"}
-                    </div>
+                    {property.owner_details?.profile_picture ? (
+                      <img src={property.owner_details.profile_picture} alt={property.owner_details.full_name} className="w-12 h-12 rounded-full border border-green-100 object-cover" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-[#E8F5E9] border border-green-100 flex items-center justify-center font-bold text-xl text-[#2D5F3F]">
+                        {property.owner_details?.full_name?.[0] || "U"}
+                      </div>
+                    )}
                     <div>
                       <p className="text-xs text-gray-500 uppercase font-semibold">Listed By</p>
                       <p className="font-bold text-gray-900 truncate max-w-[150px]">{property.owner_details?.full_name}</p>

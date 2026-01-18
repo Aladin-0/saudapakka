@@ -31,6 +31,7 @@ class PropertySerializer(serializers.ModelSerializer):
     has_mojani = serializers.SerializerMethodField()
     has_active_mandate = serializers.SerializerMethodField()
     active_mandate_id = serializers.SerializerMethodField()
+    is_saved = serializers.SerializerMethodField()
 
     class Meta:
         model = Property
@@ -74,7 +75,11 @@ class PropertySerializer(serializers.ModelSerializer):
             'mojani_nakasha',
             'doc_7_12_or_pr_card',
             'title_search_report',
+            'title_search_report',
             'has_7_12', 'has_mojani', 'has_active_mandate', 'active_mandate_id',
+            
+            # User Specific
+            'is_saved', 'views_count',
 
             # Legal Docs (Optional)
             'rera_project_certificate',
@@ -190,6 +195,13 @@ class PropertySerializer(serializers.ModelSerializer):
             status__in=['ACTIVE', 'PENDING']
         ).first()
         return str(mandate.id) if mandate else None
+
+    def get_is_saved(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            from .models import SavedProperty
+            return SavedProperty.objects.filter(user=request.user, property=obj).exists()
+        return False
 
     def to_representation(self, instance):
         """

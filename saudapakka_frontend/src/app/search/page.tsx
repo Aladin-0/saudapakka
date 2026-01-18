@@ -43,74 +43,112 @@ function SearchResultsContent() {
   const [availability, setAvailability] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState("-created_at");
 
-  // Fetch when URL Params change
+  // Fetch when URL Params change - Sync State & Fetch
   useEffect(() => {
-    // Sync URL params to State on initial load or param change
-    const pType = searchParams.get("property");
-    if (pType && !propertyTypes.includes(pType)) {
-      setPropertyTypes([pType]);
+    // 1. Sync State with URL
+    const pTypes = searchParams.getAll("property_type");
+    // Fallback for singular 'property' param from SearchBar
+    const pSingle = searchParams.get("property");
+    if (pTypes.length > 0) {
+      setPropertyTypes(pTypes);
+    } else if (pSingle) {
+      setPropertyTypes([pSingle]);
+    } else {
+      setPropertyTypes([]);
     }
 
-    const bhk = searchParams.get("bhk");
-    if (bhk && !bhkConfigs.includes(bhk)) {
-      setBhkConfigs([bhk]);
-    }
+    const bhk = searchParams.getAll("bhk");
+    setBhkConfigs(bhk);
 
-    const budget = searchParams.get("budget");
-    if (budget) {
-      if (budget === "50L") { setBudgetMax("5000000"); }
-      else if (budget === "50L-1CR") { setBudgetMin("5000000"); setBudgetMax("10000000"); }
-      else if (budget === "1CR-2CR") { setBudgetMin("10000000"); setBudgetMax("20000000"); }
-      else if (budget === "2CR-5CR") { setBudgetMin("20000000"); setBudgetMax("50000000"); }
-      else if (budget === "5CR+") { setBudgetMin("50000000"); }
-    }
+    const avail = searchParams.getAll("availability");
+    setAvailability(avail);
 
+    const minP = searchParams.get("min_price");
+    const maxP = searchParams.get("max_price");
+
+    // Handle Presets from SearchBar "budget" param
+    const budgetPreset = searchParams.get("budget");
+    if (minP) setBudgetMin(minP);
+    else if (budgetPreset === "50L-1CR") setBudgetMin("5000000");
+    else if (budgetPreset === "1CR-2CR") setBudgetMin("10000000");
+    else if (budgetPreset === "2CR-5CR") setBudgetMin("20000000");
+    else if (budgetPreset === "5CR+") setBudgetMin("50000000");
+    else setBudgetMin("");
+
+    if (maxP) setBudgetMax(maxP);
+    else if (budgetPreset === "50L") setBudgetMax("5000000");
+    else if (budgetPreset === "50L-1CR") setBudgetMax("10000000");
+    else if (budgetPreset === "1CR-2CR") setBudgetMax("20000000");
+    else if (budgetPreset === "2CR-5CR") setBudgetMax("50000000");
+    else setBudgetMax("");
+
+    const sort = searchParams.get("ordering");
+    if (sort) setSortBy(sort);
+
+    // 2. Fetch Data
     fetchListings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]); // trigger on URL change
+  }, [searchParams]);
 
   const fetchListings = async () => {
     setLoading(true);
     try {
       const apiParams = new URLSearchParams();
 
-      // From SearchBar
+      // Basic Search
       const q = searchParams.get("q");
       if (q) apiParams.append("search", q);
 
-      const type = searchParams.get("type");
+      const type = searchParams.get("type"); // listing_type
       if (type) apiParams.append("listing_type", type);
 
-      // From Sidebar Filters
-      if (propertyTypes.length > 0) {
-        propertyTypes.forEach(pt => apiParams.append("property_type", pt));
+      // Property Type
+      // We read from URL directly for API call to ensure consistency, 
+      // but we can also use the state since we just synced it. 
+      // Let's use URL params for truth.
+      const pTypes = searchParams.getAll("property_type");
+      if (pTypes.length > 0) {
+        pTypes.forEach(pt => apiParams.append("property_type", pt));
       } else if (searchParams.get("property")) {
-        // Fallback if state hasn't updated yet but param exists
         apiParams.append("property_type", searchParams.get("property")!);
       }
 
-      if (bhkConfigs.length > 0) {
-        bhkConfigs.forEach(bhk => {
+      // BHK
+      const bhks = searchParams.getAll("bhk");
+      if (bhks.length > 0) {
+        bhks.forEach(bhk => {
           if (bhk === "5+") apiParams.append("bhk_config__gte", "5");
           else apiParams.append("bhk_config", bhk);
         });
-      } else if (searchParams.get("bhk")) {
-        apiParams.append("bhk_config", searchParams.get("bhk")!);
       }
 
-      // Budget priorities: State > URL
-      if (budgetMin) apiParams.append("min_price", budgetMin);
-      else if (searchParams.get("budget") === "50L-1CR") apiParams.append("min_price", "5000000");
-      // ... (rest handled by effect state update usually, but fallback is good)
+      // Budget
+      // Prioritize explicit min/max, then preset
+      const minP = searchParams.get("min_price");
+      const maxP = searchParams.get("max_price");
+      const budgetPreset = searchParams.get("budget");
 
-      if (budgetMax) apiParams.append("max_price", budgetMax);
-      // ...
+      if (minP) apiParams.append("min_price", minP);
+      else if (budgetPreset === "50L-1CR") apiParams.append("min_price", "5000000");
+      else if (budgetPreset === "1CR-2CR") apiParams.append("min_price", "10000000");
+      else if (budgetPreset === "2CR-5CR") apiParams.append("min_price", "20000000");
+      else if (budgetPreset === "5CR+") apiParams.append("min_price", "50000000");
 
-      if (availability.length > 0) {
-        availability.forEach(av => apiParams.append("availability_status", av));
+      if (maxP) apiParams.append("max_price", maxP);
+      else if (budgetPreset === "50L") apiParams.append("max_price", "5000000");
+      else if (budgetPreset === "50L-1CR") apiParams.append("max_price", "10000000");
+      else if (budgetPreset === "1CR-2CR") apiParams.append("max_price", "20000000");
+      else if (budgetPreset === "2CR-5CR") apiParams.append("max_price", "50000000");
+
+      // Availability
+      const avails = searchParams.getAll("availability");
+      if (avails.length > 0) {
+        avails.forEach(av => apiParams.append("availability_status", av));
       }
 
-      apiParams.append("ordering", sortBy);
+      // Ordering
+      const ordering = searchParams.get("ordering") || "-created_at";
+      apiParams.append("ordering", ordering);
 
       const res = await api.get(`/api/properties/?${apiParams.toString()}`);
       setListings(res.data);
@@ -121,35 +159,76 @@ function SearchResultsContent() {
     }
   };
 
+  // --- URL UPDATERS ---
+
+  const updateUrl = (newParams: Record<string, string | string[] | null>) => {
+    const current = new URLSearchParams(searchParams.toString());
+
+    Object.entries(newParams).forEach(([key, value]) => {
+      current.delete(key);
+      if (value === null) return;
+      if (Array.isArray(value)) {
+        value.forEach(v => current.append(key, v));
+      } else {
+        current.set(key, value);
+      }
+    });
+
+    router.push(`/search?${current.toString()}`);
+  };
+
   const togglePropertyType = (type: string) => {
-    setPropertyTypes(prev =>
-      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
-    );
+    const current = searchParams.getAll("property_type");
+    // Also include 'property' param if it exists and we are adding to it
+    const legacy = searchParams.get("property");
+    let newTypes = [...current];
+    if (legacy && !newTypes.includes(legacy)) newTypes.push(legacy);
+
+    if (newTypes.includes(type)) {
+      newTypes = newTypes.filter(t => t !== type);
+    } else {
+      newTypes.push(type);
+    }
+
+    // Clear legacy 'property' param and use standard 'property_type'
+    updateUrl({ property_type: newTypes, property: null });
   };
 
   const toggleBhk = (bhk: string) => {
-    setBhkConfigs(prev =>
-      prev.includes(bhk) ? prev.filter(b => b !== bhk) : [...prev, bhk]
-    );
+    const current = searchParams.getAll("bhk");
+    let newBhk = current.includes(bhk)
+      ? current.filter(b => b !== bhk)
+      : [...current, bhk];
+    updateUrl({ bhk: newBhk });
   };
 
   const toggleAvailability = (status: string) => {
-    setAvailability(prev =>
-      prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
-    );
+    const current = searchParams.getAll("availability");
+    let newAvail = current.includes(status)
+      ? current.filter(s => s !== status)
+      : [...current, status];
+    updateUrl({ availability: newAvail });
+  };
+
+  const handleBudgetMin = (val: string) => {
+    updateUrl({ min_price: val || null, budget: null }); // Clear preset budget if custom used
+  };
+
+  const handleBudgetMax = (val: string) => {
+    updateUrl({ max_price: val || null, budget: null });
   };
 
   const clearAllFilters = () => {
-    setPropertyTypes([]);
-    setBhkConfigs([]);
-    setBudgetMin("");
-    setBudgetMax("");
-    setAvailability([]);
-    setSortBy("-created_at");
-    router.push("/search"); // Clear URL params too
+    router.push("/search");
   };
 
-  const hasActiveFilters = propertyTypes.length > 0 || bhkConfigs.length > 0 || budgetMin || budgetMax || availability.length > 0;
+  const hasActiveFilters =
+    propertyTypes.length > 0 ||
+    bhkConfigs.length > 0 ||
+    budgetMin ||
+    budgetMax ||
+    availability.length > 0;
+
 
   // Filter Sidebar Content
   const FilterContent = () => (
@@ -330,28 +409,7 @@ function SearchResultsContent() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
         <div className="flex gap-5">
-
-          {/* Left Sidebar - Filters */}
-          <aside className="hidden lg:block w-64 flex-shrink-0">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 sticky top-16 overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-                <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm">
-                  <SlidersHorizontal className="w-4 h-4" />
-                  Filters
-                  {hasActiveFilters && (
-                    <span className="ml-auto text-xs text-[#2D5F3F] bg-[#E8F5E9] px-2 py-0.5 rounded-full">
-                      {propertyTypes.length + bhkConfigs.length + availability.length + (budgetMin || budgetMax ? 1 : 0)}
-                    </span>
-                  )}
-                </h3>
-              </div>
-              <div className="px-4 pb-4 max-h-[calc(100vh-150px)] overflow-y-auto">
-                <FilterContent />
-              </div>
-            </div>
-          </aside>
-
-          {/* Right Content - Results */}
+          {/* Main Content - Results (Left Side) */}
           <main className="flex-1 min-w-0">
             {/* Results Header */}
             <div className="flex items-center justify-between mb-4">
@@ -433,6 +491,26 @@ function SearchResultsContent() {
               </div>
             )}
           </main>
+
+          {/* Right Sidebar - Filters */}
+          <aside className="hidden lg:block w-64 flex-shrink-0">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 sticky top-16 overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+                <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm">
+                  <SlidersHorizontal className="w-4 h-4" />
+                  Filters
+                  {hasActiveFilters && (
+                    <span className="ml-auto text-xs text-[#2D5F3F] bg-[#E8F5E9] px-2 py-0.5 rounded-full">
+                      {propertyTypes.length + bhkConfigs.length + availability.length + (budgetMin || budgetMax ? 1 : 0)}
+                    </span>
+                  )}
+                </h3>
+              </div>
+              <div className="px-4 pb-4 max-h-[calc(100vh-150px)] overflow-y-auto">
+                <FilterContent />
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
 

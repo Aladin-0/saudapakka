@@ -65,9 +65,13 @@ export default function AdminSidebar() {
 
             <div className="pt-6 border-t border-white/10">
                 <div className="flex items-center gap-3 mb-6 px-2">
-                    <div className="w-10 h-10 rounded-full bg-accent-green flex items-center justify-center text-dark-green font-bold">
-                        {user?.full_name?.[0] || "A"}
-                    </div>
+                    {user?.profile_picture ? (
+                        <img src={user.profile_picture} alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-white/20" />
+                    ) : (
+                        <div className="w-10 h-10 rounded-full bg-accent-green flex items-center justify-center text-dark-green font-bold text-lg">
+                            {user?.full_name?.[0] || "A"}
+                        </div>
+                    )}
                     <div>
                         <div className="text-sm font-semibold text-white">{user?.full_name || "Admin"}</div>
                         <div className="text-xs text-gray-400">Administrator</div>

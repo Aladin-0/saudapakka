@@ -25,7 +25,7 @@ export default function InitiateMandatePage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { user } = useAuth();
-    const preSelectedPropId = searchParams.get('propertyId');
+    const preSelectedPropId = searchParams.get('property');
 
     // State
     const [loading, setLoading] = useState(false);

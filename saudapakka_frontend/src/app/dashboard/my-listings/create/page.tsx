@@ -806,7 +806,7 @@ export default function CreatePropertyPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="font-bold text-sm">Total Price (â‚¹) <span className="text-red-500">*</span></Label>
+                      <Label className="font-bold text-sm flex items-center gap-1">Total Price (<IndianRupee className="w-3 h-3 inline" />) <span className="text-red-500">*</span></Label>
                       <Input
                         name="total_price"
                         type="number"
@@ -819,7 +819,7 @@ export default function CreatePropertyPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="font-bold text-sm">Price per Sq.ft (â‚¹) <span className="text-gray-400 text-xs font-normal ml-2">(Optional)</span></Label>
+                      <Label className="font-bold text-sm flex items-center gap-1">Price per Sq.ft (<IndianRupee className="w-3 h-3 inline" />) <span className="text-gray-400 text-xs font-normal ml-2">(Optional)</span></Label>
                       <div className="relative">
                         <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center bg-[#2D5F3F] border-r border-gray-300 rounded-l-xl text-white">
                           <IndianRupee className="w-4 h-4" />
@@ -838,7 +838,7 @@ export default function CreatePropertyPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label className="font-bold text-sm">Maintenance (â‚¹)</Label>
+                        <Label className="font-bold text-sm flex items-center gap-1">Maintenance (<IndianRupee className="w-3 h-3 inline" />)</Label>
                         <Input
                           name="maintenance_charges"
                           type="number"
@@ -1639,14 +1639,14 @@ export default function CreatePropertyPage() {
                     <div className="flex justify-between p-3 bg-white rounded-lg">
                       <span className="text-gray-600">Total Price:</span>
                       <span className="font-bold text-green-700 text-base">
-                        â‚¹ {formData.total_price ? Number(formData.total_price).toLocaleString('en-IN') : '-'}
+                        <IndianRupee className="w-4 h-4 inline mr-1" /> {formData.total_price ? Number(formData.total_price).toLocaleString('en-IN') : '-'}
                       </span>
                     </div>
 
                     {formData.price_per_sqft && (
                       <div className="flex justify-between p-3 bg-white rounded-lg">
                         <span className="text-gray-600">Price per Sq.ft:</span>
-                        <span className="font-bold">â‚¹ {Number(formData.price_per_sqft).toLocaleString('en-IN')}</span>
+                        <span className="font-bold flex items-center"><IndianRupee className="w-4 h-4 mr-1" /> {Number(formData.price_per_sqft).toLocaleString('en-IN')}</span>
                       </div>
                     )}
 

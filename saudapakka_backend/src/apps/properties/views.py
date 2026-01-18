@@ -27,7 +27,7 @@ class PropertyFilter(django_filters.FilterSet):
     class Meta:
         model = Property
         fields = [
-            'property_type', 'sub_type', 'bhk_config', 'city', 'locality', 
+            'listing_type', 'property_type', 'sub_type', 'bhk_config', 'city', 'locality', 
             'furnishing_status', 'availability_status', 'facing'
         ]
 
@@ -204,11 +204,20 @@ class PropertyViewSet(viewsets.ModelViewSet):
             return Response({'message': 'Removed from saved'}, status=200)
         return Response({'message': 'Saved successfully'}, status=201)
 
-    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=True, methods=['get'], permission_classes=[permissions.AllowAny])
     def record_view(self, request, pk=None):
-        """Called when user opens a property. Updates the 'Recently Viewed' list."""
+        """Called when user opens a property. Updates the 'Recently Viewed' list and increments view counter."""
         property_obj = self.get_object()
-        RecentlyViewed.objects.update_or_create(user=request.user, property=property_obj)
+        
+        # Increment global view counter
+        from django.db.models import F
+        Property.objects.filter(id=property_obj.id).update(views_count=F('views_count') + 1)
+        property_obj.refresh_from_db()
+
+        # Track user history if authenticated
+        if request.user.is_authenticated:
+            RecentlyViewed.objects.update_or_create(user=request.user, property=property_obj)
+            
         serializer = self.get_serializer(property_obj)
         return Response(serializer.data)
 

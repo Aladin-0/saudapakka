@@ -165,6 +165,9 @@ class Property(models.Model):
     priority_listing = models.BooleanField(default=False, help_text="Higher priority in search results")
     admin_notes = models.TextField(blank=True, null=True, help_text="Internal admin notes (not visible to users)")
     
+    # Metrics
+    views_count = models.IntegerField(default=0, help_text="Total number of views")
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
@@ -226,7 +229,9 @@ def delete_property_files(sender, instance, **kwargs):
         'title_search_report',
         'rera_project_certificate',
         'gst_registration',
-        'sale_deed_registration_copy'
+        'sale_deed_registration_copy',
+        'electricity_bill',
+        'sale_deed'
     ]
     for field_name in file_fields:
         file_field = getattr(instance, field_name)

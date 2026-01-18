@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, Home, ArrowRight, X, Loader2 } from "lucide-react";
 import { usePlacesAutocomplete } from '@/hooks/usePlacesAutocomplete';
 
@@ -15,22 +15,42 @@ interface SelectedPlace {
 
 export default function SearchBar() {
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     // --- STATE ---
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [listingType, setListingType] = useState("SALE");
+    const [propertyType, setPropertyType] = useState("ALL");
+    const [budget, setBudget] = useState("ANY");
+    const [bedrooms, setBedrooms] = useState("ANY");
+
+    // Sync with URL params on mount/update
+    useEffect(() => {
+        if (searchParams) {
+            const type = searchParams.get("type");
+            if (type) setListingType(type);
+
+            const q = searchParams.get("q");
+            if (q) setSearchQuery(q);
+
+            const prop = searchParams.get("property");
+            if (prop) setPropertyType(prop);
+
+            const bud = searchParams.get("budget");
+            if (bud) setBudget(bud);
+
+            const bhk = searchParams.get("bhk");
+            if (bhk) setBedrooms(bhk);
+        }
+    }, [searchParams]);
+
     const [selectedPlace, setSelectedPlace] = useState<SelectedPlace | null>(null);
     const [showDropdown, setShowDropdown] = useState(false);
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-    // Advanced Filters
-    const [propertyType, setPropertyType] = useState("ALL");
-    const [budget, setBudget] = useState("ANY");
-    const [bedrooms, setBedrooms] = useState("ANY");
 
     // Google Places Autocomplete Hook
     const { predictions, isLoading: suggestionsLoading, error: suggestionsError, getSuggestions, selectPlace } = usePlacesAutocomplete();
@@ -104,6 +124,7 @@ export default function SearchBar() {
 
         router.push(`/search?${params.toString()}`);
         setShowDropdown(false);
+        setIsFilterOpen(false); // Close filter panel
     }, [selectedPlace, searchQuery, listingType, propertyType, budget, bedrooms, router]);
 
     // --- KEYBOARD NAVIGATION ---
@@ -209,7 +230,7 @@ export default function SearchBar() {
     const showBHK = !['PLOT', 'LAND', 'COMMERCIAL_UNIT'].includes(propertyType);
 
     return (
-        <div className="w-full max-w-4xl mx-auto px-4 sm:px-0 relative z-20">
+        <div className="w-full max-w-4xl mx-auto px-4 sm:px-0 relative z-40">
             {/* Main Search Pill */}
             <div className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-full shadow-2xl transition-all hover:shadow-3xl">
                 <div className="relative flex flex-col sm:flex-row items-center p-2">
