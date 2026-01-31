@@ -97,3 +97,19 @@ class BrokerProfile(models.Model):
     services_offered = models.JSONField(default=list)
     experience_years = models.IntegerField(default=0)
     is_verified = models.BooleanField(default=False)
+
+class ExternalAPIKey(models.Model):
+    """API Keys for external automation (e.g., WhatsApp bots) to list properties."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='api_keys')
+    name = models.CharField(max_length=100, help_text="e.g. 'WhatsApp Bot'")
+    key = models.CharField(max_length=64, unique=True, editable=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.key:
+            self.key = uuid.uuid4().hex + uuid.uuid4().hex  # 64 char random key
+        super().save(*args, **kwargs)
+        
+    def __str__(self):
+        return f"{self.name} ({self.user.email})"

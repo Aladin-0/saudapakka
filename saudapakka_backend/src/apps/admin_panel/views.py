@@ -268,3 +268,55 @@ class AdminPropertyDetail(generics.RetrieveAPIView):
     from apps.properties.serializers import AdminPropertySerializer
     serializer_class = AdminPropertySerializer
     queryset = Property.objects.all()
+
+# ==========================================
+# 4. API KEY MANAGEMENT
+# ==========================================
+
+class AdminAPIKeyList(generics.ListCreateAPIView):
+    """
+    List all API keys or create a new one.
+    GET /api/admin/api-keys/
+    POST /api/admin/api-keys/ with { "user_id": "...", "name": "..." }
+    """
+    permission_classes = [permissions.IsAdminUser]
+    
+    def get_queryset(self):
+        from apps.users.models import ExternalAPIKey
+        return ExternalAPIKey.objects.all().select_related('user').order_by('-created_at')
+    
+    def get_serializer_class(self):
+        from .serializers import APIKeySerializer
+        return APIKeySerializer
+    
+    def create(self, request, *args, **kwargs):
+        from apps.users.models import ExternalAPIKey
+        
+        user_id = request.data.get('user_id')
+        name = request.data.get('name', 'API Key')
+        
+        if not user_id:
+            return Response({"error": "user_id is required"}, status=400)
+        
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+        
+        # Create the key
+        api_key = ExternalAPIKey.objects.create(user=user, name=name)
+        
+        from .serializers import APIKeySerializer
+        serializer = APIKeySerializer(api_key)
+        return Response(serializer.data, status=201)
+
+class AdminAPIKeyDelete(generics.DestroyAPIView):
+    """
+    Delete an API key.
+    DELETE /api/admin/api-keys/{id}/
+    """
+    permission_classes = [permissions.IsAdminUser]
+    
+    def get_queryset(self):
+        from apps.users.models import ExternalAPIKey
+        return ExternalAPIKey.objects.all()

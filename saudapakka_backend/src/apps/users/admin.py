@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, KYCVerification, BrokerProfile
+from .models import User, KYCVerification, BrokerProfile, ExternalAPIKey
 
 @admin.register(User)
 class CustomUserAdmin(BaseUserAdmin):
@@ -18,3 +18,9 @@ class CustomUserAdmin(BaseUserAdmin):
 
 admin.site.register(KYCVerification)
 admin.site.register(BrokerProfile)
+
+@admin.register(ExternalAPIKey)
+class ExternalAPIKeyAdmin(admin.ModelAdmin):
+    list_display = ('name', 'user', 'key', 'is_active', 'created_at')
+    readonly_fields = ('key',)
+    search_fields = ('user__email', 'name')

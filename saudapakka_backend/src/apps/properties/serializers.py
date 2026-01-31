@@ -263,3 +263,116 @@ class AdminPropertySerializer(PropertySerializer):
     Serializer for Admin access, including full owner details (contact info).
     """
     owner_details = UserSerializer(source='owner', read_only=True)
+
+class ExternalPropertySerializer(serializers.ModelSerializer):
+    """
+    Simplified serializer for automation/bots (WhatsApp).
+    Requires NO documents. Handles images as a list of files.
+    Includes ALL possible property attributes for comprehensive listings.
+    """
+    uploaded_images = serializers.ListField(
+        child=serializers.ImageField(max_length=1000000, allow_empty_file=False, use_url=False),
+        write_only=True,
+        required=False
+    )
+    
+    # --- Formatted Displays (Read Only) ---
+    property_type_display = serializers.CharField(source='get_property_type_display', read_only=True)
+    sub_type_display = serializers.CharField(source='get_sub_type_display', read_only=True)
+    listing_type_display = serializers.CharField(source='get_listing_type_display', read_only=True)
+    furnishing_status_display = serializers.CharField(source='get_furnishing_status_display', read_only=True)
+    availability_status_display = serializers.CharField(source='get_availability_status_display', read_only=True)
+    facing_display = serializers.CharField(source='get_facing_display', read_only=True)
+    listed_by_display = serializers.CharField(source='get_listed_by_display', read_only=True)
+
+    class Meta:
+        model = Property
+        fields = [
+            # 1. Basic & Category
+            'id', 'title', 'description', 'property_type', 'property_type_display', 
+            'sub_type', 'sub_type_display', 'listing_type', 'listing_type_display',
+            
+            # 2. Configuration & Unit Details
+            'bhk_config', 'bathrooms', 'balconies', 'furnishing_status', 'furnishing_status_display',
+            'super_builtup_area', 'carpet_area', 'plot_area',
+            
+            # 3. Pricing & Financials
+            'total_price', 'price_per_sqft', 'maintenance_charges', 'maintenance_interval',
+            
+            # 4. Location
+            'project_name', 'address_line', 'locality', 'city', 'pincode', 
+            'latitude', 'longitude', 'landmarks',
+            
+            # 5. Building & Status
+            'specific_floor', 'total_floors', 'facing', 'facing_display',
+            'availability_status', 'availability_status_display', 'possession_date', 'age_of_construction',
+            
+            # 6. Residential Amenities
+            'has_power_backup', 'has_lift', 'has_swimming_pool', 'has_club_house',
+            'has_gym', 'has_park', 'has_reserved_parking', 'has_security',
+            'is_vastu_compliant', 'has_intercom', 'has_piped_gas', 'has_wifi',
+            
+            # 7. Plot/Land Amenities
+            'has_drainage_line', 'has_one_gate_entry', 'has_jogging_park', 'has_children_park',
+            'has_temple', 'has_water_line', 'has_street_light', 'has_internal_roads',
+            
+            # 8. Media & Contact
+            'video_url', 'whatsapp_number', 'listed_by', 'listed_by_display',
+            'uploaded_images'
+        ]
+        extra_kwargs = {
+            'bhk_config': {'required': False},
+            'bathrooms': {'required': False},
+            'carpet_area': {'required': False},
+            'address_line': {'required': True},
+            'locality': {'required': True},
+            'city': {'required': True},
+        }
+
+    def validate(self, data):
+        """
+        Reuse the main PropertySerializer validation logic to ensure
+        data integrity even for external API listings.
+        """
+        # Instantiate the main serializer with the data to perform complex cross-field validation
+        # We only pass data, no instance, and we skip the doc validation part since images are manual
+        # Actually, it's better to just manually call the logic to avoid recursion or overhead
+        
+        # 1. Sub-type validation
+        property_type = data.get('property_type')
+        sub_type = data.get('sub_type')
+        if sub_type:
+            valid_sub_types = {
+                'VILLA_BUNGALOW': ['BUNGALOW', 'TWIN_BUNGALOW', 'ROWHOUSE', 'VILLA'],
+                'PLOT': ['RES_PLOT', 'COM_PLOT'],
+                'LAND': ['AGRI_LAND', 'IND_LAND'],
+                'COMMERCIAL_UNIT': ['SHOP', 'OFFICE', 'SHOWROOM'],
+                'FLAT': []
+            }
+            allowed = valid_sub_types.get(property_type, [])
+            if sub_type not in allowed:
+                raise serializers.ValidationError({"sub_type": f"Invalid sub_type for {property_type}"})
+
+        # 2. Price validation
+        total_price = data.get('total_price')
+        if total_price and total_price <= 0:
+            raise serializers.ValidationError({"total_price": "Must be greater than 0"})
+
+        return data
+
+    def create(self, validated_data):
+        uploaded_images = validated_data.pop('uploaded_images', [])
+        
+        # System Defaults
+        validated_data['is_verified'] = False
+        validated_data['verification_status'] = 'PENDING'
+        validated_data['owner'] = self.context['request'].user
+        
+        # Property Creation
+        property_instance = Property.objects.create(**validated_data)
+        
+        # Image Handling
+        for image in uploaded_images:
+            PropertyImage.objects.create(property=property_instance, image=image)
+            
+        return property_instance

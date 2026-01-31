@@ -40,6 +40,7 @@ class SendOtpView(APIView):
             return Response({'error': 'Email is required'}, status=400)
 
         otp = str(random.randint(100000, 999999))
+        print(f"\n==========\nGENERATED OTP: {otp}\n==========\n") # DEBUG LOG
         
         # FIX: Generate a temp unique phone number to satisfy unique constraint
         # max_length=15. "temp_" (5) + 8 chars = 13 chars.

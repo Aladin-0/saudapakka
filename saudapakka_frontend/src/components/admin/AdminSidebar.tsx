@@ -8,7 +8,8 @@ import {
     ChartPieIcon,
     DocumentCheckIcon,
     ArrowLeftOnRectangleIcon,
-    HomeIcon
+    HomeIcon,
+    KeyIcon
 } from "@heroicons/react/24/outline";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
@@ -28,6 +29,7 @@ export default function AdminSidebar() {
         { name: "User Management", href: "/admin/users", icon: UsersIcon },
         { name: "Properties", href: "/admin/properties", icon: HomeModernIcon },
         { name: "Mandate Requests", href: "/admin/mandates", icon: DocumentCheckIcon },
+        { name: "API Keys", href: "/admin/apikeys", icon: KeyIcon },
         { name: "My Profile", href: "/admin/profile", icon: UsersIcon },
         { name: "Home Website", href: "/", icon: HomeIcon },
     ];

@@ -12,7 +12,7 @@ services:
     ports:
       - "5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hello_django"]
+      test: ["CMD-SHELL", "pg_isready -U hello_django -d saudapakka_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -21,8 +21,7 @@ services:
     build: ./saudapakka_backend
     container_name: saudapakka_backend
     restart: unless-stopped
-    ports:
-      - "8000:8000"
+
     volumes:
       - ./saudapakka_backend/src:/app/src
       - ./saudapakka_backend/media:/app/media  # ✅ Host media sync
@@ -51,8 +50,7 @@ services:
     build: ./saudapakka_frontend
     container_name: saudapakka_frontend
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+
 
   nginx:
     image: nginx:alpine

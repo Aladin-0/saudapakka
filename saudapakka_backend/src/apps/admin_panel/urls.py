@@ -8,6 +8,8 @@ from .views import (
     AdminUserAction,
     AdminUserDetail,
     AdminUserKYCVerify,
+    AdminAPIKeyList,
+    AdminAPIKeyDelete,
 )
 
 urlpatterns = [
@@ -26,4 +28,8 @@ urlpatterns = [
 
     # View Single Property (Details + Docs)
     path('properties/<uuid:pk>/', AdminPropertyDetail.as_view(), name='admin-prop-detail'),
+
+    # API Key Management
+    path('api-keys/', AdminAPIKeyList.as_view(), name='admin-apikey-list'),
+    path('api-keys/<int:pk>/', AdminAPIKeyDelete.as_view(), name='admin-apikey-delete'),
 ]

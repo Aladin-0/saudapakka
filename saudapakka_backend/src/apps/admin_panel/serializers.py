@@ -61,3 +61,17 @@ class AdminUserDetailSerializer(UserSerializer):
             }
             for p in props
         ]
+
+class APIKeySerializer(serializers.Serializer):
+    """
+    Serializer for ExternalAPIKey model.
+    """
+    id = serializers.IntegerField(read_only=True)
+    user_id = serializers.UUIDField(source='user.id', read_only=True)
+    user_email = serializers.EmailField(source='user.email', read_only=True)
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
+    name = serializers.CharField()
+    key = serializers.CharField(read_only=True)
+    is_active = serializers.BooleanField(read_only=True)
+    created_at = serializers.DateTimeField(read_only=True)
+

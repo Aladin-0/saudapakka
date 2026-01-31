@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, status, filters, exceptions
+from rest_framework import viewsets, permissions, status, filters, exceptions, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -7,7 +7,29 @@ from django.db.models import Q
 import django_filters
 
 from .models import Property, PropertyImage, SavedProperty, RecentlyViewed
-from .serializers import PropertySerializer, PropertyImageSerializer
+
+from .serializers import PropertySerializer, PropertyImageSerializer, ExternalPropertySerializer
+from apps.users.authentication import APIKeyAuthentication
+
+from rest_framework.renderers import JSONRenderer
+
+class ExternalPropertyCreateView(generics.CreateAPIView):
+    """
+    Dedicated endpoint for WhatsApp Bots / Automation.
+    Authentication: X-API-KEY header (APIKeyAuthentication).
+    Rate Limit: None.
+    Parser: Multipart (Images involved).
+    """
+    authentication_classes = [APIKeyAuthentication]
+    permission_classes = [permissions.IsAuthenticated] # User is set by APIKeyAuthentication
+    serializer_class = ExternalPropertySerializer
+    parser_classes = [MultiPartParser, FormParser]
+    renderer_classes = [JSONRenderer]
+    throttle_classes = [] # No rate limit
+
+    def perform_create(self, serializer):
+        # Additional logic if needed, but serializer handles mostly
+        serializer.save()
 from .permissions import IsOwnerOrReadOnly
 
 # --- ADVANCED FILTERING LOGIC ---
