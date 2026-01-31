@@ -156,7 +156,7 @@ export default function AdminMandateDetailsPage() {
                                     dealType={mandate.deal_type}
                                     property={propertyDetails}
                                     mandate={mandate}
-                                    user={user || undefined}
+                                    user={(user as any) || undefined}
                                     isSigned={isActive || !!mandate.broker_signature} // Show signatures if active
                                     signatureUrl={typeof mandate.broker_signature === 'string' ? mandate.broker_signature : undefined} // Admin/Broker sig
                                     ownerSignatureUrl={typeof mandate.seller_signature === 'string' ? mandate.seller_signature : undefined}
@@ -199,7 +199,7 @@ export default function AdminMandateDetailsPage() {
                                 {/* Download Button for ACTIVE mandates */}
                                 {isActive && (
                                     <button
-                                        onClick={() => downloadMandatePDF(mandate, propertyDetails || mandate.property_details, user || undefined)}
+                                        onClick={() => downloadMandatePDF(mandate, propertyDetails || mandate.property_details, (user as any) || undefined)}
                                         className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all"
                                     >
                                         <Download className="w-4 h-4" />

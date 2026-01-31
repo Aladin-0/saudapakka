@@ -147,7 +147,20 @@ export default function KYCPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) { setError('Please upload an image file (JPG or PNG)'); return; }
-    if (file.size > 5 * 1024 * 1024) { setError('File size must be less than 5MB'); return; }
+
+    // Different size limits for front and back
+    const frontMaxSize = 15 * 1024 * 1024; // 15MB
+    const backMaxSize = 25 * 1024 * 1024;  // 25MB
+
+    if (side === 'front' && file.size > frontMaxSize) {
+      setError('Aadhaar front image must be less than 15MB');
+      return;
+    }
+    if (side === 'back' && file.size > backMaxSize) {
+      setError('Aadhaar back image must be less than 25MB');
+      return;
+    }
+
     setError(null);
     if (side === 'front') { setFrontImage(file); setFrontPreview(URL.createObjectURL(file)); }
     else { setBackImage(file); setBackPreview(URL.createObjectURL(file)); }
@@ -216,52 +229,57 @@ export default function KYCPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-64px)] md:h-[calc(100vh-80px)] lg:h-screen w-full bg-gray-50 font-sans flex items-center justify-center p-4 md:p-6 overflow-hidden">
+    <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 via-green-50/20 to-gray-50 font-sans flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-hidden">
 
-      {/* Background Ambience */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-primary-green/5 rounded-full blur-[120px]"></div>
-        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-green-200/20 rounded-full blur-[120px]"></div>
+      {/* Enhanced Background Ambience */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-primary-green/5 rounded-full blur-[120px] animate-pulse"></div>
+        <div className="absolute bottom-[-20%] right-[-10%] w-[70%] h-[70%] bg-green-200/20 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
       </div>
 
-      {/* Main Card */}
-      <div className="relative z-10 w-full max-w-5xl bg-white/80 backdrop-blur-xl border border-white/60 rounded-[2rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] flex flex-col max-h-full">
+      {/* Main Card - Enhanced Mobile */}
+      <div className="relative z-10 w-full max-w-5xl bg-white/90 backdrop-blur-2xl border border-white/80 rounded-2xl sm:rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)] flex flex-col max-h-[calc(100vh-24px)] sm:max-h-[calc(100vh-32px)]">
 
-        {/* Progress Bar (Top) */}
-        <div className="h-1.5 w-full bg-gray-100 rounded-t-[2rem] overflow-hidden">
+        {/* Enhanced Progress Bar */}
+        <div className="h-2 sm:h-1.5 w-full bg-gradient-to-r from-gray-100 to-gray-50 rounded-t-2xl sm:rounded-t-3xl overflow-hidden">
           <div
-            className="h-full bg-primary-green transition-all duration-500 ease-out"
+            className="h-full bg-gradient-to-r from-primary-green to-green-600 transition-all duration-700 ease-out shadow-lg shadow-green-500/30"
             style={{ width: `${(step / 3) * 100}%` }}
           ></div>
         </div>
 
-        {/* Header Section */}
-        <div className="px-8 pt-8 pb-4 flex items-end justify-between border-b border-gray-100/50 flex-shrink-0">
-          <div>
-            <div className="flex items-center gap-2 text-primary-green font-bold text-xs uppercase tracking-wider mb-1">
-              <span className="w-2 h-2 rounded-full bg-primary-green animate-pulse"></span>
+        {/* Enhanced Header Section */}
+        <div className="px-4 sm:px-6 md:px-8 pt-6 sm:pt-8 pb-4 sm:pb-5 flex items-end justify-between border-b border-gray-100/50 flex-shrink-0">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 text-primary-green font-bold text-xs sm:text-sm uppercase tracking-wider mb-2">
+              <span className="w-2 h-2 rounded-full bg-primary-green animate-pulse shadow-lg shadow-green-500/50"></span>
               Step 0{step} / 03
             </div>
-            <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
               {step === 1 && "Select Identity"}
               {step === 2 && "Documents"}
               {step === 3 && "Face Verification"}
             </h1>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">
+              {step === 1 && "Choose your role to get started"}
+              {step === 2 && "Upload both sides of your Aadhaar"}
+              {step === 3 && "Take a clear selfie for verification"}
+            </p>
           </div>
-          <div className="hidden md:flex gap-1.5 opacity-40">
+          <div className="hidden md:flex gap-2 opacity-50">
             {[1, 2, 3].map((s) => (
-              <div key={s} className={`h-1.5 w-8 rounded-full transition-colors ${s === step ? 'bg-primary-green' : 'bg-gray-300'}`} />
+              <div key={s} className={`h-2 w-10 rounded-full transition-all duration-300 ${s === step ? 'bg-primary-green scale-110' : s < step ? 'bg-green-300' : 'bg-gray-200'}`} />
             ))}
           </div>
         </div>
 
-        {/* CONTENT AREA (Scrollable Middle) */}
-        <div className="flex-1 overflow-y-auto px-8 py-6 custom-scrollbar">
+        {/* CONTENT AREA - Enhanced Scrolling */}
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8 custom-scrollbar">
 
-          {/* STEP 1: ROLE */}
+          {/* STEP 1: ROLE - Enhanced Mobile Grid */}
           {step === 1 && (
-            <div className="h-full flex flex-col justify-center animate-[fadeIn_0.4s_ease-out]">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="h-full flex flex-col justify-center animate-[fadeIn_0.5s_ease-out]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {ROLES.map((role) => {
                   const Icon = role.icon;
                   const isSelected = selectedRole === role.id;
@@ -269,17 +287,17 @@ export default function KYCPage() {
                     <div
                       key={role.id}
                       onClick={() => setSelectedRole(role.id)}
-                      className={`group relative p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer ${isSelected
-                          ? 'bg-green-50/50 border-primary-green shadow-md scale-[1.02]'
-                          : 'bg-white border-gray-100 hover:border-green-200 hover:shadow-sm'
+                      className={`group relative p-5 sm:p-6 rounded-2xl border-2 transition-all duration-300 cursor-pointer active:scale-95 ${isSelected
+                        ? 'bg-gradient-to-br from-green-50 to-green-100/50 border-primary-green shadow-lg shadow-green-500/20 scale-[1.02]'
+                        : 'bg-white border-gray-200 hover:border-green-300 hover:shadow-md active:shadow-sm'
                         }`}
                     >
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors ${isSelected ? 'bg-primary-green text-white' : 'bg-gray-50 text-gray-400 group-hover:bg-green-50 group-hover:text-primary-green'}`}>
-                        <Icon className="w-6 h-6" />
+                      <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 ${isSelected ? 'bg-primary-green text-white shadow-lg shadow-green-500/30' : 'bg-gray-50 text-gray-400 group-hover:bg-green-50 group-hover:text-primary-green'}`}>
+                        <Icon className="w-6 h-6 sm:w-7 sm:h-7" />
                       </div>
-                      <h3 className={`font-bold text-lg leading-tight mb-1 ${isSelected ? 'text-primary-green' : 'text-gray-900'}`}>{role.label}</h3>
-                      <p className="text-xs text-gray-500 leading-relaxed">{role.description}</p>
-                      {isSelected && <div className="absolute top-3 right-3"><CheckCircleIcon className="w-5 h-5 text-primary-green" /></div>}
+                      <h3 className={`font-bold text-lg sm:text-xl leading-tight mb-1.5 ${isSelected ? 'text-primary-green' : 'text-gray-900'}`}>{role.label}</h3>
+                      <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">{role.description}</p>
+                      {isSelected && <div className="absolute top-4 right-4"><CheckCircleIcon className="w-6 h-6 text-primary-green drop-shadow-lg" /></div>}
                     </div>
                   );
                 })}
@@ -287,60 +305,62 @@ export default function KYCPage() {
             </div>
           )}
 
-          {/* STEP 2: DOCUMENTS */}
+          {/* STEP 2: DOCUMENTS - Enhanced Mobile Layout */}
           {step === 2 && (
-            <div className="h-full flex items-center justify-center animate-[fadeIn_0.4s_ease-out]">
-              <div className="w-full max-w-4xl grid md:grid-cols-2 gap-6">
-                {/* Front */}
+            <div className="h-full flex items-center justify-center animate-[fadeIn_0.5s_ease-out]">
+              <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                {/* Front - Enhanced Touch Target */}
                 <div
-                  className={`relative w-full aspect-[1.586/1] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all hover:border-primary-green hover:bg-green-50/30 group overflow-hidden ${frontImage ? 'border-primary-green bg-green-50/20' : 'border-gray-200 bg-white'}`}
+                  className={`relative w-full aspect-[1.586/1] rounded-2xl sm:rounded-3xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all duration-300 hover:border-primary-green hover:bg-green-50/30 group overflow-hidden active:scale-[0.98] ${frontImage ? 'border-primary-green bg-green-50/20 shadow-lg shadow-green-500/10' : 'border-gray-300 bg-white'}`}
                 >
-                  <input type="file" className="absolute inset-0 opacity-0 cursor-pointer z-20" onChange={(e) => handleFileChange(e, 'front')} />
+                  <input type="file" accept="image/*" capture="environment" className="absolute inset-0 opacity-0 cursor-pointer z-20" onChange={(e) => handleFileChange(e, 'front')} />
                   {frontPreview ? (
                     <>
                       <Image src={frontPreview} alt="Aadhaar Front" fill className="object-cover opacity-90" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                      <div className="absolute bottom-3 left-3 z-10 flex items-center gap-2 text-white font-medium text-sm">
-                        <CheckCircleIcon className="w-5 h-5 text-green-400" /> Front Side
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+                      <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2 text-white font-semibold text-sm sm:text-base">
+                        <CheckCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-400 drop-shadow-lg" /> Front Side
                       </div>
-                      <button onClick={(e) => { e.preventDefault(); setFrontImage(null); setFrontPreview(null); }} className="absolute top-2 right-2 z-30 p-1.5 bg-white/20 backdrop-blur-md rounded-full hover:bg-red-500 hover:text-white text-white transition-colors">
-                        <XCircleIcon className="w-5 h-5" />
+                      <button onClick={(e) => { e.preventDefault(); setFrontImage(null); setFrontPreview(null); }} className="absolute top-3 right-3 z-30 p-2 bg-white/30 backdrop-blur-md rounded-full hover:bg-red-500 hover:text-white text-white transition-all active:scale-90">
+                        <XCircleIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                       </button>
                     </>
                   ) : (
-                    <div className="text-center p-4">
-                      <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                        <ArrowUpTrayIcon className="w-6 h-6 text-gray-400 group-hover:text-primary-green" />
+                    <div className="text-center p-6">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-md">
+                        <ArrowUpTrayIcon className="w-7 h-7 sm:w-8 sm:h-8 text-gray-400 group-hover:text-primary-green transition-colors" />
                       </div>
-                      <p className="text-gray-900 font-semibold mb-1">Aadhaar Front</p>
-                      <p className="text-xs text-gray-400">Click to upload image</p>
+                      <p className="text-gray-900 font-bold text-base sm:text-lg mb-1">Aadhaar Front</p>
+                      <p className="text-xs sm:text-sm text-gray-500">Tap to upload or capture</p>
+                      <p className="text-[10px] sm:text-xs text-gray-400 mt-2">Max 15MB</p>
                     </div>
                   )}
                 </div>
 
-                {/* Back */}
+                {/* Back - Enhanced Touch Target */}
                 <div
-                  className={`relative w-full aspect-[1.586/1] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all hover:border-primary-green hover:bg-green-50/30 group overflow-hidden ${backImage ? 'border-primary-green bg-green-50/20' : 'border-gray-200 bg-white'}`}
+                  className={`relative w-full aspect-[1.586/1] rounded-2xl sm:rounded-3xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all duration-300 hover:border-primary-green hover:bg-green-50/30 group overflow-hidden active:scale-[0.98] ${backImage ? 'border-primary-green bg-green-50/20 shadow-lg shadow-green-500/10' : 'border-gray-300 bg-white'}`}
                 >
-                  <input type="file" className="absolute inset-0 opacity-0 cursor-pointer z-20" onChange={(e) => handleFileChange(e, 'back')} />
+                  <input type="file" accept="image/*" capture="environment" className="absolute inset-0 opacity-0 cursor-pointer z-20" onChange={(e) => handleFileChange(e, 'back')} />
                   {backPreview ? (
                     <>
                       <Image src={backPreview} alt="Aadhaar Back" fill className="object-cover opacity-90" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                      <div className="absolute bottom-3 left-3 z-10 flex items-center gap-2 text-white font-medium text-sm">
-                        <CheckCircleIcon className="w-5 h-5 text-green-400" /> Back Side
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+                      <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2 text-white font-semibold text-sm sm:text-base">
+                        <CheckCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-400 drop-shadow-lg" /> Back Side
                       </div>
-                      <button onClick={(e) => { e.preventDefault(); setBackImage(null); setBackPreview(null); }} className="absolute top-2 right-2 z-30 p-1.5 bg-white/20 backdrop-blur-md rounded-full hover:bg-red-500 hover:text-white text-white transition-colors">
-                        <XCircleIcon className="w-5 h-5" />
+                      <button onClick={(e) => { e.preventDefault(); setBackImage(null); setBackPreview(null); }} className="absolute top-3 right-3 z-30 p-2 bg-white/30 backdrop-blur-md rounded-full hover:bg-red-500 hover:text-white text-white transition-all active:scale-90">
+                        <XCircleIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                       </button>
                     </>
                   ) : (
-                    <div className="text-center p-4">
-                      <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                        <ArrowUpTrayIcon className="w-6 h-6 text-gray-400 group-hover:text-primary-green" />
+                    <div className="text-center p-6">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-md">
+                        <ArrowUpTrayIcon className="w-7 h-7 sm:w-8 sm:h-8 text-gray-400 group-hover:text-primary-green transition-colors" />
                       </div>
-                      <p className="text-gray-900 font-semibold mb-1">Aadhaar Back</p>
-                      <p className="text-xs text-gray-400">Click to upload image</p>
+                      <p className="text-gray-900 font-bold text-base sm:text-lg mb-1">Aadhaar Back</p>
+                      <p className="text-xs sm:text-sm text-gray-500">Tap to upload or capture</p>
+                      <p className="text-[10px] sm:text-xs text-gray-400 mt-2">Max 25MB</p>
                     </div>
                   )}
                 </div>
@@ -348,20 +368,21 @@ export default function KYCPage() {
             </div>
           )}
 
-          {/* STEP 3: SELFIE */}
+          {/* STEP 3: SELFIE - Enhanced Mobile Camera */}
           {step === 3 && (
-            <div className="h-full flex flex-col items-center justify-center animate-[fadeIn_0.4s_ease-out]">
-              <div className="relative w-64 h-64 md:w-72 md:h-72 bg-gray-100 rounded-full overflow-hidden border-8 border-white shadow-xl ring-1 ring-gray-200">
+            <div className="h-full flex flex-col items-center justify-center animate-[fadeIn_0.5s_ease-out]">
+              <div className="relative w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96 bg-gradient-to-br from-gray-100 to-gray-50 rounded-full overflow-hidden border-[6px] sm:border-8 border-white shadow-2xl ring-1 ring-gray-200">
 
                 {!isCameraOpen && !selfiePreview && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 text-center p-6">
-                    <FingerPrintIcon className="w-16 h-16 text-gray-300 mb-2" />
-                    <p className="text-sm text-gray-500 font-medium mb-4">Position your face within the frame</p>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 text-center p-8">
+                    <FingerPrintIcon className="w-20 h-20 sm:w-24 sm:h-24 text-gray-300 mb-4 animate-pulse" />
+                    <p className="text-sm sm:text-base text-gray-600 font-semibold mb-2">Position your face</p>
+                    <p className="text-xs sm:text-sm text-gray-500 mb-6 max-w-[200px]">Make sure you're in a well-lit area</p>
                     <button
                       onClick={openCamera}
-                      className="bg-primary-green hover:bg-dark-green text-white px-6 py-2.5 rounded-full font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all text-sm flex items-center gap-2"
+                      className="bg-gradient-to-r from-primary-green to-green-600 hover:from-green-600 hover:to-primary-green text-white px-8 py-3.5 sm:px-10 sm:py-4 rounded-full font-bold shadow-xl shadow-green-500/30 hover:shadow-2xl hover:-translate-y-1 transition-all text-sm sm:text-base flex items-center gap-2 active:scale-95"
                     >
-                      <CameraIcon className="w-4 h-4" /> Start Camera
+                      <CameraIcon className="w-5 h-5 sm:w-6 sm:h-6" /> Start Camera
                     </button>
                   </div>
                 )}
@@ -369,12 +390,12 @@ export default function KYCPage() {
                 {isCameraOpen && !selfiePreview && (
                   <>
                     <video id="selfie-video" autoPlay playsInline muted className="w-full h-full object-cover transform scale-x-[-1]" />
-                    <div className="absolute inset-0 border-[3px] border-primary-green/30 rounded-full animate-pulse"></div>
-                    <div className="absolute inset-0 flex items-end justify-center pb-6">
-                      <button onClick={captureSelfie} className="w-12 h-12 rounded-full bg-white border-4 border-gray-200 hover:border-primary-green transition-all shadow-lg"></button>
+                    <div className="absolute inset-0 border-[4px] border-primary-green/40 rounded-full animate-pulse"></div>
+                    <div className="absolute inset-0 flex items-end justify-center pb-8 sm:pb-10">
+                      <button onClick={captureSelfie} className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white border-4 sm:border-[6px] border-gray-300 hover:border-primary-green transition-all shadow-2xl active:scale-90 hover:scale-105"></button>
                     </div>
-                    <button onClick={closeCamera} className="absolute top-4 right-4 p-1 bg-black/40 rounded-full text-white hover:bg-red-500 transition-colors">
-                      <XCircleIcon className="w-5 h-5" />
+                    <button onClick={closeCamera} className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 sm:p-2.5 bg-black/50 backdrop-blur-md rounded-full text-white hover:bg-red-500 transition-all active:scale-90">
+                      <XCircleIcon className="w-6 h-6 sm:w-7 sm:h-7" />
                     </button>
                   </>
                 )}
@@ -382,42 +403,42 @@ export default function KYCPage() {
                 {selfiePreview && (
                   <>
                     <Image src={selfiePreview} alt="Selfie" fill className="object-cover transform scale-x-[-1]" />
-                    <div className="absolute inset-0 bg-primary-green/10 mix-blend-overlay"></div>
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
-                      <CheckBadgeIcon className="w-4 h-4 text-primary-green" />
-                      <span className="text-xs font-bold text-dark-green">Captured</span>
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary-green/20 to-transparent mix-blend-overlay"></div>
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md px-4 py-2 sm:px-5 sm:py-2.5 rounded-full flex items-center gap-2 shadow-xl">
+                      <CheckBadgeIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary-green" />
+                      <span className="text-sm sm:text-base font-bold text-dark-green">Captured</span>
                     </div>
-                    <button onClick={retakeSelfie} className="absolute top-0 right-0 left-0 h-full w-full opacity-0 hover:opacity-100 bg-black/40 text-white font-medium flex items-center justify-center transition-opacity z-10">
-                      Retake Photo
+                    <button onClick={retakeSelfie} className="absolute inset-0 opacity-0 hover:opacity-100 active:opacity-100 bg-black/60 text-white font-bold text-base sm:text-lg flex items-center justify-center transition-opacity z-10 backdrop-blur-sm">
+                      Tap to Retake
                     </button>
                   </>
                 )}
               </div>
-              <p className="mt-6 text-center text-sm text-gray-500 max-w-xs mx-auto">
-                {selfiePreview ? "Photo looks good! You can now proceed." : "Ensure you are in a well-lit environment and not wearing glasses."}
+              <p className="mt-6 sm:mt-8 text-center text-sm sm:text-base text-gray-600 max-w-sm mx-auto px-4 leading-relaxed">
+                {selfiePreview ? "✓ Photo looks great! You can now proceed." : "Ensure you're in a well-lit environment and remove glasses if wearing any."}
               </p>
             </div>
           )}
 
         </div>
 
-        {/* FOOTER (Actions) */}
-        <div className="px-8 py-6 border-t border-gray-100 flex-shrink-0 bg-white/50 backdrop-blur-sm rounded-b-[2rem]">
+        {/* FOOTER - Enhanced Mobile Actions */}
+        <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6 border-t border-gray-100 flex-shrink-0 bg-white/70 backdrop-blur-md rounded-b-2xl sm:rounded-b-3xl">
           {error && (
-            <div className="mb-4 bg-red-50 text-red-600 px-4 py-2.5 rounded-lg text-sm flex items-center gap-2 animate-[shake_0.4s_ease-in-out]">
-              <XCircleIcon className="w-4 h-4 flex-shrink-0" />
-              {error}
+            <div className="mb-4 bg-gradient-to-r from-red-50 to-red-100/50 text-red-700 px-4 py-3 sm:py-3.5 rounded-xl text-sm sm:text-base flex items-center gap-3 animate-[shake_0.4s_ease-in-out] border border-red-200 shadow-sm">
+              <XCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+              <span className="font-medium">{error}</span>
             </div>
           )}
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             <div>
               {step > 1 && (
                 <button
                   onClick={prevStep}
-                  className="text-gray-500 font-medium hover:text-gray-900 transition-colors text-sm px-2"
+                  className="text-gray-600 font-semibold hover:text-gray-900 transition-colors text-sm sm:text-base px-3 sm:px-4 py-2 hover:bg-gray-100 rounded-lg active:scale-95"
                 >
-                  Back
+                  ← Back
                 </button>
               )}
             </div>
@@ -425,20 +446,20 @@ export default function KYCPage() {
             {step < 3 ? (
               <button
                 onClick={nextStep}
-                className="bg-primary-green text-white px-8 py-3 rounded-xl font-bold hover:bg-dark-green transition-all shadow-lg shadow-green-900/10 hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2"
+                className="bg-gradient-to-r from-primary-green to-green-600 text-white px-8 sm:px-10 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl font-bold hover:from-green-600 hover:to-primary-green transition-all shadow-lg shadow-green-900/20 hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 text-sm sm:text-base active:scale-95"
               >
-                Continue <ChevronRightIcon className="w-4 h-4" />
+                Continue <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             ) : (
               <button
                 onClick={handleSubmit}
                 disabled={uploading || !selfiePreview}
-                className={`px-10 py-3 rounded-xl font-bold text-white transition-all shadow-lg hover:-translate-y-0.5 flex items-center gap-2 ${uploading ? 'bg-gray-400 cursor-wait' : 'bg-primary-green hover:bg-dark-green shadow-green-900/20'}`}
+                className={`px-8 sm:px-12 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl font-bold text-white transition-all shadow-lg hover:-translate-y-0.5 flex items-center gap-2 text-sm sm:text-base active:scale-95 ${uploading || !selfiePreview ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-primary-green to-green-600 hover:from-green-600 hover:to-primary-green shadow-green-900/30 hover:shadow-xl'}`}
               >
                 {uploading ? (
-                  <><ArrowPathIcon className="w-5 h-5 animate-spin" /> Verifying...</>
+                  <><ArrowPathIcon className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" /> Verifying...</>
                 ) : (
-                  <><ShieldCheckIcon className="w-5 h-5" /> Submit Verification</>
+                  <><ShieldCheckIcon className="w-5 h-5 sm:w-6 sm:h-6" /> Submit</>
                 )}
               </button>
             )}
@@ -449,23 +470,31 @@ export default function KYCPage() {
 
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
+          width: 4px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
           background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background-color: rgba(0, 0, 0, 0.05);
+          background: linear-gradient(to bottom, rgba(34, 197, 94, 0.3), rgba(34, 197, 94, 0.1));
           border-radius: 20px;
         }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(to bottom, rgba(34, 197, 94, 0.5), rgba(34, 197, 94, 0.2));
+        }
         @keyframes fadeIn {
-           from { opacity: 0; transform: scale(0.98); }
+           from { opacity: 0; transform: scale(0.96); }
            to { opacity: 1; transform: scale(1); }
         }
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-4px); }
-          75% { transform: translateX(4px); }
+          25% { transform: translateX(-6px); }
+          75% { transform: translateX(6px); }
+        }
+        @media (max-width: 640px) {
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 3px;
+          }
         }
       `}</style>
     </div>

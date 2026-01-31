@@ -622,12 +622,22 @@ export default function EditPropertyPage() {
         try {
             const formDataToSend = new FormData();
 
+            // Construct address_line from addressLines
+            const addressLine = [addressLines.line1, addressLines.line2, addressLines.line3]
+                .filter(line => line.trim())
+                .join(', ');
+
             // Append standard fields
             Object.entries(formData).forEach(([key, value]) => {
                 if (value !== null && value !== undefined && value !== "") {
                     formDataToSend.append(key, value.toString());
                 }
             });
+
+            // Append address_line separately
+            if (addressLine) {
+                formDataToSend.append('address_line', addressLine);
+            }
 
             // Append images to delete (if any)
             imagesToDelete.forEach(id => formDataToSend.append('images_to_delete', id.toString()));

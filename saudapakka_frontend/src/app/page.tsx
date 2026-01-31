@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Zap, Star, Shield, ArrowRight } from "lucide-react";
@@ -10,7 +10,7 @@ import api from "@/lib/axios";
 import PropertyCard from "@/components/listings/property-card";
 import SearchBar from "@/components/search/SearchBar";
 
-export default function HomePage() {
+function HomePageContent() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -54,12 +54,7 @@ export default function HomePage() {
           <div className="grid lg:grid-cols-12 gap-6 md:gap-8 items-center mb-8 md:mb-12">
             {/* Left Content Area */}
             <div className="lg:col-span-7 text-center lg:text-left">
-              {/* Badge */}
-              {/* <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 mb-4 sm:mb-6 animate-float">
-                <div className="w-2 h-2 bg-[#4A9B6D] rounded-full animate-pulse"></div>
-                <span className="text-white text-xs sm:text-sm font-medium">Trusted by 10,000+ Home Seekers</span>
-              </div> */}
-
+              
               {/* Main Headline - Responsive text sizes */}
               <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight">
                 India's First
@@ -143,7 +138,9 @@ export default function HomePage() {
           </div>
 
           {/* SEARCH BAR COMPONENT */}
-          <SearchBar />
+          <Suspense fallback={<div>Loading search...</div>}>
+            <SearchBar />
+          </Suspense>
 
           {/* Trust Indicators - Responsive */}
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8 mt-6 sm:mt-8 text-white/80 px-2">
@@ -322,39 +319,47 @@ export default function HomePage() {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-20px); }
         }
-        
+
         @keyframes float-delayed {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-20px); }
         }
-        
+
         @keyframes float-card {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           33% { transform: translateY(-15px) rotate(2deg); }
           66% { transform: translateY(-8px) rotate(-2deg); }
         }
-        
+
         @keyframes blob {
           0%, 100% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
           50% { border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%; }
         }
-        
+
         .animate-float {
           animation: float 6s ease-in-out infinite;
         }
-        
+
         .animate-float-delayed {
           animation: float-delayed 6s ease-in-out 2s infinite;
         }
-        
+
         .animate-float-card {
           animation: float-card 8s ease-in-out infinite;
         }
-        
+
         .animate-blob {
           animation: blob 8s ease-in-out infinite;
         }
       `}</style>
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomePageContent />
+    </Suspense>
   );
 }

@@ -1,25 +1,68 @@
-# Dependencies
-node_modules/
-*/node_modules/
-saudapakka_frontend/node_modules/
+# Environment variables
+.env
+.env.local
+.env.production
+*.env
 
-# Python/Django
+# Database
+*.sqlite3
+*.db
+postgres_data/
+
+# Python
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
 venv/
 env/
-.env
-db.sqlite3
+*.egg-info/
+dist/
+build/
 
-# System
-.DS_Store  
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.next/
+out/
+.cache/
+
+# Media and static files (uploaded content)
+media/
+staticfiles/
+static/
+
+# Logs
+*.log
+build.log
+logs/
+
+# Docker
+.dockerignore
+
+# OS
+.DS_Store
 Thumbs.db
+*.swp
+*.swo
+*~
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# Build
-.next/
-dist/
-build/
+# SSL Certificates (sensitive!)
+certbot/
+*.pem
+*.key
+*.crt
+
+# Backups
+*.backup
+*.bak
+*.old

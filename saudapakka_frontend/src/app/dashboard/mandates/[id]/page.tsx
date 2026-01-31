@@ -232,7 +232,7 @@ export default function MandateDetailsPage() {
                     {/* Download Button for ACTIVE mandates (anyone involved or admin) */}
                     {isActive && (amIInvolved || (user?.is_staff ?? false)) && (
                         <button
-                            onClick={() => downloadMandatePDF(mandate, propertyDetails || mandate.property_details, user || undefined)}
+                            onClick={() => downloadMandatePDF(mandate, propertyDetails || mandate.property_details, (user as any) || undefined)}
                             className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold transition-all shadow-sm hover:shadow"
                         >
                             <Download className="w-4 h-4" />

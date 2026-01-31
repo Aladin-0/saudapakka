@@ -91,7 +91,7 @@ class PropertySerializer(serializers.ModelSerializer):
         
         # --- Security: Fields that the user CANNOT change manually ---
         read_only_fields = [
-            'id', 'owner', 'verification_status', 'price_per_sqft', 
+            'id', 'owner', 'verification_status', 
             'created_at'
         ]
 
@@ -173,6 +173,49 @@ class PropertySerializer(serializers.ModelSerializer):
     def validate_longitude(self, value):
         if value < -180 or value > 180:
             raise serializers.ValidationError("Invalid Longitude range.")
+        return value
+
+    def validate_total_price(self, value):
+        """Ensure total_price is a valid positive decimal."""
+        if value is not None:
+            try:
+                from decimal import Decimal
+                decimal_value = Decimal(str(value))
+                if decimal_value <= 0:
+                    raise serializers.ValidationError("Total price must be greater than 0.")
+                return decimal_value
+            except (ValueError, TypeError):
+                raise serializers.ValidationError("Invalid total price format.")
+        return value
+
+    def validate_price_per_sqft(self, value):
+        """Ensure price_per_sqft is a valid decimal if provided."""
+        if value is not None and value != '':
+            try:
+                from decimal import Decimal
+                decimal_value = Decimal(str(value))
+                if decimal_value < 0:
+                    raise serializers.ValidationError("Price per sqft cannot be negative.")
+                return decimal_value
+            except (ValueError, TypeError):
+                raise serializers.ValidationError("Invalid price per sqft format.")
+        return value
+
+    def validate_maintenance_charges(self, value):
+        """Ensure maintenance_charges is properly handled as decimal."""
+        if value is not None:
+            try:
+                from decimal import Decimal
+                # Convert to string first to avoid float precision issues
+                decimal_value = Decimal(str(value))
+                if decimal_value < 0:
+                    raise serializers.ValidationError("Maintenance charges cannot be negative.")
+                # Ensure it fits within the field constraints (max_digits=10, decimal_places=2)
+                if decimal_value >= Decimal('100000000'):
+                    raise serializers.ValidationError("Maintenance charges exceeds maximum allowed value.")
+                return decimal_value
+            except (ValueError, TypeError):
+                raise serializers.ValidationError("Invalid maintenance charges format.")
         return value
 
     def get_has_7_12(self, obj):

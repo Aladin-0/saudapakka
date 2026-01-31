@@ -249,7 +249,7 @@ export default function UserProfilePage() {
                                     </div>
                                     <div className="flex justify-between items-center text-sm">
                                         <span className="text-gray-500 font-medium">Verified On</span>
-                                        <span className="font-bold text-gray-900">{formatDate(user.kyc_details?.verified_at)}</span>
+                                        <span className="font-bold text-gray-900">{formatDate(user.kyc_details?.verified_at || null)}</span>
                                     </div>
                                 </div>
                             </div>

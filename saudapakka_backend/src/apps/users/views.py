@@ -250,11 +250,25 @@ class UploadAadhaarView(APIView):
                 "error": "Invalid file format. Please upload JPG or PNG images only."
             }, status=400)
         
-        # Validate file sizes (5MB max)
-        max_size = 5 * 1024 * 1024  # 5MB
-        if aadhaar_front.size > max_size or aadhaar_back.size > max_size or selfie.size > max_size:
+        # Validate file sizes
+        # Front: 15MB, Back: 25MB, Selfie: 10MB
+        front_max_size = 15 * 1024 * 1024  # 15MB
+        back_max_size = 25 * 1024 * 1024   # 25MB
+        selfie_max_size = 10 * 1024 * 1024 # 10MB
+        
+        if aadhaar_front.size > front_max_size:
             return Response({
-                "error": "File size exceeds 5MB limit. Please upload smaller images."
+                "error": "Aadhaar front image exceeds 15MB limit. Please upload a smaller image."
+            }, status=400)
+        
+        if aadhaar_back.size > back_max_size:
+            return Response({
+                "error": "Aadhaar back image exceeds 25MB limit. Please upload a smaller image."
+            }, status=400)
+        
+        if selfie.size > selfie_max_size:
+            return Response({
+                "error": "Selfie image exceeds 10MB limit. Please upload a smaller image."
             }, status=400)
         
         try:
@@ -265,24 +279,25 @@ class UploadAadhaarView(APIView):
                     'aadhaar_front_image': aadhaar_front,
                     'aadhaar_back_image': aadhaar_back,
                     'selfie_image': selfie,
+                    'status': 'VERIFIED',
+                    'verified_at': timezone.now(),
+                    'verified_by': 'AUTO_UPLOAD'
                 }
             )
             
-            # 4. Save requested role if provided
+            # Save requested role if provided
             requested_role = request.data.get('requested_role')
             if requested_role:
                 kyc_verification.requested_role = requested_role
-
-            # 5. AUTO-VERIFICATION & ACCOUNT UPGRADE
-            kyc_verification.status = 'VERIFIED'
-            kyc_verification.verified_at = timezone.now()
-            kyc_verification.verified_by = 'AUTO_UPLOAD'
-            kyc_verification.save()
+                kyc_verification.save()
 
             # Upgrade User Role
             user = request.user
             user.is_kyc_verified = True
-            user.profile_picture = selfie # Set selfie as profile picture
+            
+            # Set selfie as profile picture using the saved file from KYC verification
+            if kyc_verification.selfie_image:
+                user.profile_picture = kyc_verification.selfie_image
             
             if requested_role:
                 user.role_category = requested_role

@@ -321,6 +321,9 @@ export default function PropertyDetailsPage() {
 
   // WhatsApp Logic
   const handleWhatsAppChat = () => {
+    // Require authentication before allowing WhatsApp chat
+    if (!user) return router.push(`/login?redirect=${window.location.pathname}`);
+
     if (!property) return;
 
     // Use contactDetails if revealed, otherwise check if property has public whatsapp
@@ -383,18 +386,9 @@ export default function PropertyDetailsPage() {
             <Button variant="ghost" onClick={() => router.back()} className="-ml-2 hover:bg-gray-100">
               <ArrowLeft className="w-5 h-5 mr-2" /> Back to Search
             </Button>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setShowShareModal(true)}>
-                <Share2 className="w-4 h-4 mr-2" /> Share
-              </Button>
-              {user?.is_active_broker && !property.has_active_mandate && (
-                <Link href={`/dashboard/mandates/create?propertyId=${id}`}>
-                  <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 cursor-pointer px-3 py-2 text-sm">
-                    Initiate Mandate
-                  </Badge>
-                </Link>
-              )}
-            </div>
+            <Button variant="outline" size="sm" onClick={() => setShowShareModal(true)}>
+              <Share2 className="w-4 h-4 mr-2" /> Share
+            </Button>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
@@ -697,6 +691,17 @@ export default function PropertyDetailsPage() {
             <Phone className="w-5 h-5 mr-2" /> Call
           </Button>
         </div>
+
+        {/* Request Mandate Button for Brokers (Mobile) */}
+        {user?.is_active_broker && !property.has_active_mandate && (
+          <Button
+            onClick={() => router.push(`/dashboard/mandates/create?property=${property.id}`)}
+            className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold"
+          >
+            <Gavel className="w-5 h-5 mr-2" />
+            Request Mandate
+          </Button>
+        )}
       </div>
 
       {/* Image Modal (Zoom) */}
