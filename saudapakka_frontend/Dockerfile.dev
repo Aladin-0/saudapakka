@@ -1,0 +1,21 @@
+# Development Dockerfile
+FROM node:22-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package.json package-lock.json ./
+RUN npm install
+
+# Copy source (will be overridden by volume mount but good for cache)
+COPY . .
+
+# Environment variables
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Expose port
+EXPOSE 3000
+
+# Development command
+CMD ["npm", "run", "dev"]

@@ -32,6 +32,9 @@ staticfiles/
 *.log
 build.log
 
+# TypeScript
+*.tsbuildinfo
+
 # SSL Certificates
 certbot/
 *.pem

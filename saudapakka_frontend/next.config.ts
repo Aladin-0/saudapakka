@@ -8,11 +8,15 @@ const nextConfig: NextConfig = {
   env: {
     // FIX: Default to localhost in development to prevent 401s/CORS errors
     // Also removed /api from prod URL to prevent double /api/api/ paths
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : 'https://saudapakka.com'),
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
 
   async rewrites() {
     return [
+      {
+        source: '/api/:path*',
+        destination: 'http://backend:8000/api/:path*',
+      },
       {
         source: '/media/:path*',
         destination: 'http://backend:8000/media/:path*',
@@ -42,6 +46,7 @@ const nextConfig: NextConfig = {
 
   // Production optimizations
   reactStrictMode: true,
+  trailingSlash: true,
 
   // Compression handled by nginx/reverse proxy
   compress: true,

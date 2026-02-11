@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import Cookies from "js-cookie";
 import { motion, AnimatePresence } from "framer-motion";
+// Import configured axios instance
 import api from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -586,39 +587,14 @@ export default function CreatePropertyPage() {
 
       router.push("/dashboard/my-listings");
     } catch (err: any) {
-      console.error("Submission error details:", {
-        status: err.response?.status,
-        statusText: err.response?.statusText,
-        data: err.response?.data,
-        message: err.message,
-        propertyType: formData.property_type,
-        sentFields: Object.keys(getRelevantFormData())
-      });
+      console.group("❌ Property Submission Error");
+      console.error("Error object:", err);
+      console.error("Status:", err.status);
+      console.error("Message:", err.message);
+      console.error("Data:", err.data);
+      console.groupEnd();
 
-      let errorMsg = "Check all required fields and documents.";
-
-      if (err.response?.data) {
-        if (typeof err.response.data === 'string') {
-          // HTML error page (500 error)
-          if (err.response.status === 500) {
-            errorMsg = "Server error occurred. Please check:\n" +
-              "1. All required fields are filled correctly\n" +
-              "2. File sizes are not too large\n" +
-              "3. Contact support if the issue persists";
-          } else {
-            errorMsg = `Server error (${err.response.status})`;
-          }
-        } else if (typeof err.response.data === 'object') {
-          // DRF Validation Errors (JSON)
-          errorMsg = Object.entries(err.response.data)
-            .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`)
-            .join("\n");
-        }
-      } else if (err.message) {
-        errorMsg = err.message;
-      }
-
-      alert(`Error creating listing (${err.response?.status || 'Unknown'}): \n\n${errorMsg}`);
+      alert(err.message || "Failed to submit property. Please try again.");
     } finally {
       setLoading(false);
     }
