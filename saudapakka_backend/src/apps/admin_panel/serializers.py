@@ -1,10 +1,12 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from apps.users.serializers import UserSerializer
+from apps.users.models import ExternalAPIKey
 from apps.properties.models import Property
 from apps.users.models import KYCVerification
 
 User = get_user_model()
+
 
 class AdminUserDetailSerializer(UserSerializer):
     """
@@ -15,15 +17,12 @@ class AdminUserDetailSerializer(UserSerializer):
     last_login = serializers.DateTimeField(read_only=True)
     properties_count = serializers.SerializerMethodField()
     kyc_details = serializers.SerializerMethodField()
-    # We can also start returning a list of properties here if needed, 
-    # but maybe separate API call is better for pagination? 
-    # For now, let's include the count and maybe top 5 recent properties?
     recent_properties = serializers.SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
         fields = UserSerializer.Meta.fields + [
-            'date_joined', 
-            'last_login', 
+            'date_joined',
+            'last_login',
             'properties_count',
             'kyc_details',
             'recent_properties'
@@ -41,15 +40,13 @@ class AdminUserDetailSerializer(UserSerializer):
                 "verified_at": kyc.verified_at,
                 "verified_by": kyc.verified_by,
                 "full_name_on_record": kyc.full_name,
-                "verification_method": kyc.verified_by # e.g. 'DIGILOCKER' or 'ADMIN_MANUAL' or 'AUTO_UPLOAD'
+                "verification_method": kyc.verified_by
             }
         except KYCVerification.DoesNotExist:
             return None
 
     def get_recent_properties(self, obj):
-        # Return top 5 recent properties
         props = Property.objects.filter(owner=obj).order_by('-created_at')[:5]
-        # Return simplified data
         return [
             {
                 "id": p.id,
@@ -62,16 +59,25 @@ class AdminUserDetailSerializer(UserSerializer):
             for p in props
         ]
 
-class APIKeySerializer(serializers.Serializer):
+
+class APIKeySerializer(serializers.ModelSerializer):
     """
     Serializer for ExternalAPIKey model.
     """
-    id = serializers.IntegerField(read_only=True)
     user_id = serializers.UUIDField(source='user.id', read_only=True)
     user_email = serializers.EmailField(source='user.email', read_only=True)
     user_name = serializers.CharField(source='user.full_name', read_only=True)
-    name = serializers.CharField()
-    key = serializers.CharField(read_only=True)
-    is_active = serializers.BooleanField(read_only=True)
-    created_at = serializers.DateTimeField(read_only=True)
+    key = serializers.SerializerMethodField()
 
+    class Meta:
+        model = ExternalAPIKey
+        fields = ['id', 'user_id', 'user_email', 'user_name', 'name', 'key', 'is_active', 'created_at']
+        read_only_fields = ['id', 'is_active', 'created_at']
+
+    def get_key(self, obj):
+        """
+        Return full key ONLY on creation, otherwise show masked prefix.
+        """
+        if hasattr(obj, '_raw_key'):
+            return obj._raw_key
+        return f"sPk_{obj.prefix}.*********************"
