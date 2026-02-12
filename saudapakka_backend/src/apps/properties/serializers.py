@@ -368,6 +368,25 @@ class ExternalPropertySerializer(serializers.ModelSerializer):
         validated_data['verification_status'] = 'PENDING'
         validated_data['owner'] = self.context['request'].user
         
+        # --- Auto-Geocoding Logic ---
+        if not validated_data.get('latitude') or not validated_data.get('longitude'):
+            address_parts = [
+                validated_data.get('address_line', ''),
+                validated_data.get('locality', ''),
+                validated_data.get('city', ''),
+                validated_data.get('pincode', '')
+            ]
+            full_address = ", ".join([p for p in address_parts if p])
+            
+            if full_address:
+                try:
+                    from .utils import geocode_address
+                    lat, lng = geocode_address(full_address)
+                    if lat and lng:
+                        validated_data['latitude'] = lat
+                        validated_data['longitude'] = lng
+                    pass
+
         # Property Creation
         property_instance = Property.objects.create(**validated_data)
         
@@ -376,3 +395,4 @@ class ExternalPropertySerializer(serializers.ModelSerializer):
             PropertyImage.objects.create(property=property_instance, image=image)
             
         return property_instance
+

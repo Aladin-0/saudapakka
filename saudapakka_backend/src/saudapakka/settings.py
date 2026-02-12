@@ -1,13 +1,16 @@
 import environ
 from pathlib import Path
 import os
+import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # 1. Initialize environ
 env = environ.Env(
-    DEBUG=(bool, False)
+    DEBUG=(bool, False),
+    EMAIL_USE_TLS=(bool, True),
+    EMAIL_PORT=(int, 587),
 )
 
 # 2. Read the .env file (Attempt to read, ignore if missing in prod)
@@ -90,14 +93,15 @@ WSGI_APPLICATION = 'saudapakka.wsgi.application'
 # DATABASE
 # =============================================================================
 
+# Parse database connection from environment variables
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME':     os.environ.get('POSTGRES_DB', 'saudapakka_db'),
-        'USER':     os.environ.get('POSTGRES_USER', 'hello_django'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'hello_django'),
-        'HOST':     os.environ.get('POSTGRES_HOST', 'postgres'),
-        'PORT':     os.environ.get('POSTGRES_PORT', '5432'),
+        'NAME':     env('POSTGRES_DB', default='saudapakka_db'),
+        'USER':     env('POSTGRES_USER', default='hello_django'),
+        'PASSWORD': env('POSTGRES_PASSWORD', default='hello_django'),
+        'HOST':     env('POSTGRES_HOST', default='postgres'),
+        'PORT':     env('POSTGRES_PORT', default='5432'),
     }
 }
 
@@ -154,7 +158,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = env.int('EMAIL_PORT', default=587)
 EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
-EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='qutubahmad3@gmail.com')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 
 # STRICTLY enforce format to avoid SMTP 555 errors
@@ -212,6 +216,7 @@ CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS', default=DEBUG)
 CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=default_origins)
 CORS_ALLOW_CREDENTIALS = True
 
+# Trust the same origins for CSRF
 CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=default_origins)
 
 
@@ -237,7 +242,6 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
-    CSRF_COOKIE_HTTPONLY = True
     
     X_FRAME_OPTIONS = 'DENY'
 else:
@@ -301,3 +305,10 @@ LOGGING = {
 
 SANDBOX_API_KEY = env('SANDBOX_API_KEY', default='')
 SANDBOX_API_SECRET = env('SANDBOX_API_SECRET', default='')
+SANDBOX_BASE_URL = env('SANDBOX_BASE_URL', default='https://api.sandbox.co.in')
+
+# =============================================================================
+# GOOGLE MAPS CONFIGURATION
+# =============================================================================
+
+GOOGLE_MAPS_API_KEY = env('GOOGLE_MAPS_API_KEY', default='')

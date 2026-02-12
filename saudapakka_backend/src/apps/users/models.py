@@ -98,18 +98,39 @@ class BrokerProfile(models.Model):
     experience_years = models.IntegerField(default=0)
     is_verified = models.BooleanField(default=False)
 
+from django.contrib.auth.hashers import make_password
+import secrets
+
 class ExternalAPIKey(models.Model):
-    """API Keys for external automation (e.g., WhatsApp bots) to list properties."""
+    """
+    API Keys for external automation (e.g., WhatsApp bots).
+    Keys are HASHED. Only the prefix is stored plainly.
+    Format: 'sPk_<prefix>.<secret>'
+    """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='api_keys')
     name = models.CharField(max_length=100, help_text="e.g. 'WhatsApp Bot'")
-    key = models.CharField(max_length=64, unique=True, editable=False)
+    
+    prefix = models.CharField(max_length=8, unique=True, editable=False, default='')
+    hashed_key = models.CharField(max_length=128, editable=False, default='')
+    
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     def save(self, *args, **kwargs):
-        if not self.key:
-            self.key = uuid.uuid4().hex + uuid.uuid4().hex  # 64 char random key
+        if not self.pk:
+            # 1. Generate Prefix (8 chars hex)
+            self.prefix = secrets.token_hex(4) 
+            
+            # 2. Generate Secret (32 chars hex)
+            secret = secrets.token_hex(16)
+            
+            # 3. Store Hash
+            self.hashed_key = make_password(secret)
+            
+            # 4. Attach raw key to instance (TEMPORARY) for Admin to show ONCE
+            self._raw_key = f"sPk_{self.prefix}.{secret}"
+            
         super().save(*args, **kwargs)
         
     def __str__(self):
-        return f"{self.name} ({self.user.email})"
+        return f"{self.name} ({self.prefix}...)"

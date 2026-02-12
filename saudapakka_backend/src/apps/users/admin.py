@@ -21,6 +21,13 @@ admin.site.register(BrokerProfile)
 
 @admin.register(ExternalAPIKey)
 class ExternalAPIKeyAdmin(admin.ModelAdmin):
-    list_display = ('name', 'user', 'key', 'is_active', 'created_at')
-    readonly_fields = ('key',)
-    search_fields = ('user__email', 'name')
+    list_display = ('name', 'user', 'prefix', 'is_active', 'created_at')
+    readonly_fields = ('prefix', 'hashed_key')
+    search_fields = ('user__email', 'name', 'prefix')
+    
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if hasattr(obj, '_raw_key'):
+            from django.contrib import messages
+            msg = f"Your NEW API Key is: {obj._raw_key}  << COPY THIS NOW! IT WILL NOT BE SHOWN AGAIN."
+            messages.warning(request, msg)
