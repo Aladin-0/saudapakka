@@ -163,7 +163,7 @@ export default function APIKeysPage() {
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
                                                 <code className="text-xs bg-gray-100 px-3 py-1.5 rounded font-mono text-gray-700">
-                                                    {key.key ? `${key.key.substring(0, 16)}...${key.key.substring(key.key.length - 8)}` : "N/A"}
+                                                    {key.key.substring(0, 16)}...{key.key.substring(key.key.length - 8)}
                                                 </code>
                                                 <button
                                                     onClick={() => copyToClipboard(key.key)}

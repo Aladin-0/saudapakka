@@ -3,7 +3,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8005',
+    baseURL: '', // Empty - frontend will use full paths like /api/properties/
 });
 
 // Public endpoints that should NOT send Authorization headers
@@ -14,9 +14,7 @@ const PUBLIC_ENDPOINTS = [
 ];
 
 api.interceptors.request.use((config) => {
-    // Client-only check
     if (typeof window !== 'undefined') {
-        // Skip token for public auth endpoints
         const isPublicEndpoint = PUBLIC_ENDPOINTS.some(endpoint =>
             config.url?.includes(endpoint)
         );
@@ -33,8 +31,6 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-// Add response interceptor to handle 401 globally
-// Queue to hold requests while refreshing token
 let isRefreshing = false;
 let failedQueue: any[] = [];
 
@@ -46,24 +42,18 @@ const processQueue = (error: any, token: string | null = null) => {
             prom.resolve(token);
         }
     });
-
     failedQueue = [];
 };
 
-// Add response interceptor to handle 401 globally
 api.interceptors.response.use(
-    (response) => {
-        return response;
-    },
+    (response) => response,
     async (error) => {
         const originalRequest = error.config;
 
-        // Public endpoint check
         const isPublicEndpoint = PUBLIC_ENDPOINTS.some(endpoint =>
             originalRequest.url?.includes(endpoint)
         );
 
-        // Filter out login/verify calls from refresh logic to avoid loops
         if (isPublicEndpoint || originalRequest.url.includes('/api/auth/token/refresh/')) {
             return Promise.reject(error);
         }
@@ -81,9 +71,7 @@ api.interceptors.response.use(
                         originalRequest.headers['Authorization'] = 'Bearer ' + token;
                         return api(originalRequest);
                     })
-                    .catch((err) => {
-                        return Promise.reject(err);
-                    });
+                    .catch((err) => Promise.reject(err));
             }
 
             originalRequest._retry = true;
@@ -92,7 +80,6 @@ api.interceptors.response.use(
             const refreshToken = Cookies.get('refresh_token');
 
             if (!refreshToken) {
-                // No refresh token, direct logout
                 Cookies.remove('access_token');
                 Cookies.remove('refresh_token');
                 localStorage.removeItem('saudapakka-auth');
@@ -102,27 +89,22 @@ api.interceptors.response.use(
 
             try {
                 const response = await axios.post(
-                    `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8005'}/api/auth/token/refresh/`,
+                    '/api/auth/token/refresh/',
                     { refresh: refreshToken }
                 );
 
                 if (response.status === 200) {
                     const { access } = response.data;
                     Cookies.set('access_token', access, { expires: 7 });
-
-                    // Update the header for the ORIGINAL request
                     api.defaults.headers.common['Authorization'] = 'Bearer ' + access;
                     originalRequest.headers['Authorization'] = 'Bearer ' + access;
-
                     processQueue(null, access);
                     isRefreshing = false;
-
                     return api(originalRequest);
                 }
             } catch (refreshError) {
                 processQueue(refreshError, null);
                 isRefreshing = false;
-                // Refresh failed - logout
                 Cookies.remove('access_token');
                 Cookies.remove('refresh_token');
                 localStorage.removeItem('saudapakka-auth');

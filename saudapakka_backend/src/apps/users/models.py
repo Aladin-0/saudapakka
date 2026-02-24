@@ -134,3 +134,16 @@ class ExternalAPIKey(models.Model):
         
     def __str__(self):
         return f"{self.name} ({self.prefix}...)"
+
+    @property
+    def key_display(self):
+        """
+        Display format for admin panel (prefix only).
+        Full key is NEVER retrievable after creation.
+        """
+        if hasattr(self, '_raw_key'):
+            return self._raw_key
+        return f"sPk_{self.prefix}.*********************"
+
+    def __str__(self):
+        return f"{self.name} ({self.user.email})"

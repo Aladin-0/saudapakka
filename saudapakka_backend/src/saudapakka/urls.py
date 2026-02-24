@@ -3,13 +3,19 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from django.conf import settings
 from django.conf.urls.static import static
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 
 
 def health_check(request):
     return JsonResponse({"status": "healthy"})
 
+def api_root(request):
+    # Return 404 for API root to hide endpoints
+    raise Http404("Not found")
+
+
 urlpatterns = [
+    path('api/', api_root, name='api-root'),
     path('health/', lambda r: JsonResponse({'status': 'healthy'}), name='health'),
     path('admin/', admin.site.urls),
     path('api/', include('apps.users.urls')),

@@ -26,7 +26,7 @@ SECRET_KEY = env('SECRET_KEY', default='django-insecure-dev-key-change-in-prod')
 DEBUG = env.bool('DEBUG', default=False)
 
 # Robust definition of ALLOWED_HOSTS
-# In production, this MUST be set via env var
+default_hosts = ['*']
 default_hosts = ['saudapakka.com', 'www.saudapakka.com', 'localhost', '127.0.0.1', 'saudapakka_backend']
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=default_hosts)
 
@@ -173,6 +173,9 @@ DEFAULT_FROM_EMAIL = _from_email_clean
 # =============================================================================
 
 REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
@@ -312,3 +315,7 @@ SANDBOX_BASE_URL = env('SANDBOX_BASE_URL', default='https://api.sandbox.co.in')
 # =============================================================================
 
 GOOGLE_MAPS_API_KEY = env('GOOGLE_MAPS_API_KEY', default='')
+
+# File upload settings
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB per file
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB per file

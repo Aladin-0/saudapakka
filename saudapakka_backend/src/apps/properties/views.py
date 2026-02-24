@@ -56,7 +56,9 @@ class PropertyFilter(django_filters.FilterSet):
 # --- MAIN VIEWSET ---
 
 class PropertyViewSet(viewsets.ModelViewSet):
+    queryset = Property.objects.all()
     serializer_class = PropertySerializer
+    queryset = Property.objects.all()
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     parser_classes = [MultiPartParser, FormParser] 
     

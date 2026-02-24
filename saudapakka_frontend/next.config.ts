@@ -1,25 +1,21 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Production: Enable standalone output for Docker (ONLY in production!)
-  ...(process.env.NODE_ENV === 'production' ? { output: 'standalone' } : {}),
+  output: 'standalone',
 
-  // Production environment variables
   env: {
-    // FIX: Default to localhost in development to prevent 401s/CORS errors
-    // Also removed /api from prod URL to prevent double /api/api/ paths
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '/api',
   },
 
   async rewrites() {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://backend:8000/api/:path*',
+        destination: 'http://saudapakka_backend:8000/api/:path*',
       },
       {
         source: '/media/:path*',
-        destination: 'http://backend:8000/media/:path*',
+        destination: 'http://saudapakka_backend:8000/media/:path*',
       },
     ];
   },
@@ -41,14 +37,9 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Disable x-powered-by header for security
   poweredByHeader: false,
-
-  // Production optimizations
   reactStrictMode: true,
   trailingSlash: true,
-
-  // Compression handled by nginx/reverse proxy
   compress: true,
 };
 

@@ -171,10 +171,6 @@ class Property(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        # Auto-set whatsapp_number from owner's phone if not provided
-        if not self.whatsapp_number and self.owner and self.owner.phone_number:
-            self.whatsapp_number = self.owner.phone_number
-        
         # Auto-calculation logic removed to allow manual entry
         super().save(*args, **kwargs)
 
