@@ -22,7 +22,7 @@ environ.Env.read_env(os.path.join(BASE_DIR.parent.parent, '.env'))
 # SECURITY SETTINGS (Production Hardened)
 # =============================================================================
 
-SECRET_KEY = env('SECRET_KEY', default='django-insecure-dev-key-change-in-prod')
+SECRET_KEY = env('SECRET_KEY')  # ❌ No default — must be set in .env or env vars
 
 DEBUG = env.bool('DEBUG', default=False)
 
@@ -181,7 +181,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',  # ✅ Secure default
     ],
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
@@ -196,7 +196,7 @@ REST_FRAMEWORK = {
 
 from datetime import timedelta
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=7),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),  # ✅ Short-lived access tokens
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'AUTH_HEADER_TYPES': ('Bearer',),
     'ROTATE_REFRESH_TOKENS': True,
