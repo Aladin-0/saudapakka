@@ -21,6 +21,8 @@ services:
     build: ./saudapakka_backend
     container_name: saudapakka_backend
     restart: unless-stopped
+    env_file:
+      - ./saudapakka_backend/.env
     ports:
       - "8000:8000"
     volumes:

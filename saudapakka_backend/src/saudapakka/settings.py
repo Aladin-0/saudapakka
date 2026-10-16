@@ -22,7 +22,7 @@ environ.Env.read_env(os.path.join(BASE_DIR.parent.parent, '.env'))
 # SECURITY SETTINGS (Production Hardened)
 # =============================================================================
 
-SECRET_KEY = env('SECRET_KEY')  # ❌ No default — must be set in .env or env vars
+SECRET_KEY = env('SECRET_KEY', default='django-insecure-prod-key-CHANGE-THIS-TO-RANDOM-STRING')
 
 DEBUG = env.bool('DEBUG', default=False)
 
